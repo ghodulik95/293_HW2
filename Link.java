@@ -1,5 +1,5 @@
+import java.sql.Date;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -11,7 +11,7 @@ public class Link {
 	private List<Date> dates;
 	
 	//Constructor sets valid to false, active to false, and initializes the date list
-	public void Link(){
+	public Link(){
 		isValidLink = false;
 		isActiveAfterLastLink = false;
 		dates = new ArrayList<Date>();
@@ -24,6 +24,7 @@ public class Link {
 			return false;
 		
 		linkedUsers = users;
+		this.isValidLink = true;
 		return true;
 	}
 	
@@ -48,13 +49,12 @@ public class Link {
 		
 		//if the user is active already, or the last date is before the given date, return false
 		if(this.isActiveAfterLastLink ||  
-				(!dates.isEmpty() && dates.get(dates.size() - 1).before(date)))
+				(!dates.isEmpty() && dates.get(dates.size() - 1).after(date)))
 			return false;
 		
 		//if there are no problems, add the given date to the date list, set active to true, and return true
 		dates.add(date);
 		this.isActiveAfterLastLink = true;
-		this.isValidLink = true;
 		return true;
 	}
 	
@@ -66,7 +66,7 @@ public class Link {
 		
 		//if the user is already inactive, or the last date is before the given date, return false
 		if(!this.isActiveAfterLastLink ||  
-				(!dates.isEmpty() && dates.get(dates.size() - 1).before(date)))
+				(!dates.isEmpty() && dates.get(dates.size() - 1).after(date)))
 			return false;
 		
 		//if there are no problems, add the given date to the date list, set active to false, and return true
@@ -91,16 +91,18 @@ public class Link {
 			//active = !active;
 		}
 			
-		return i % 2 == 0;
+		return i % 2 == 1;
 	}
 	
 	//gets the first date
 	public Date firstEvent() throws UninitializedObjectException{
 		//if invalid or the are no dates in our list, throw exception
-		if(!this.isValidLink || dates.size() == 0)
+		if(dates == null)
 			throw new UninitializedObjectException("Link user set not initialized");
+		if(!this.isValidLink)
+			throw new UninitializedObjectException("Link is not valid");
 		if(dates.isEmpty())
-			throw new UninitializedObjectException("There are no dates recorded");
+			return null;
 		
 		return dates.get(0);
 	}
@@ -110,17 +112,18 @@ public class Link {
 		if(!this.isValidLink)
 			throw new UninitializedObjectException("Link user set not initialized");
 		
+		//start i at one, because you can only have a next event with 2 or more events
 		int i = 0;
 		//while i is within bounds, and the date at i is either before or the same as the given date
 		while(i < dates.size() && (dates.get(i).before(date) || date.equals(dates.get(i)))){
 			i++;
 		}
 		
-		//if there is a date at i, return it
+		//if there is a date at i and the previous date is the given date, return it
 		if(i < dates.size()){
 			return dates.get(i);
 		}
-		//otherwise, there are no dates after the given date, so we return null
+		//otherwise, there are no dates after the given date, or the given date was not a date we have, so we return null
 		else{
 			return null;
 		}
@@ -135,7 +138,7 @@ public class Link {
 		
 		String dateOutput = dates.get(0).toString();
 		String description = "The link was establised on " + dates.get(0).toString();
-		for(int i = 1; i < dates.size() - 1; i++){
+		for(int i = 1; i < dates.size(); i++){
 			dateOutput += ", " + dates.get(i).toString();
 			
 			if(i % 2 == 0){
