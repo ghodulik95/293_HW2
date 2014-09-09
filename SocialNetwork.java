@@ -27,6 +27,9 @@ public class SocialNetwork {
 	//adds a user to the users Map
 	//returns false if the user is already in the Map, true otherwise
 	public boolean addUser(User user){
+		//Check if the input(s) are null
+		if(user == null)
+			throw new NullPointerException("The given user is null.");
 		if(users.containsKey(user.getID()))
 			return false;
 		
@@ -36,11 +39,17 @@ public class SocialNetwork {
 	
 	//returns whether the given string is the id of a member
 	public boolean isMember(String id){
+		//Check if the input(s) are null
+		if( id == null || id.compareTo("") == 0 )
+			throw new NullPointerException("The given id is null");
 		return users.containsKey( id );
 	}
 	
 	//Returns the user in the network with the given id, null otherwise
 	public User getUser(String id){
+		//Check if the input(s) are null
+		if( id == null || id.compareTo("") == 0 )
+			throw new NullPointerException("The given id is null");
 		if(users.containsKey(id))
 			return users.get(id);
 		else
@@ -50,6 +59,12 @@ public class SocialNetwork {
 	//Establishes a link between the two users with the ids in the ids set on the given date
 	//returns false if there are any problems
 	public boolean establishLink(Set<String> ids, Date date){
+		//Check if the input(s) are null
+		if(ids == null)
+			throw new NullPointerException("The given set of ids is null");
+		if(date == null)
+			throw new NullPointerException("The given date is null");
+		
 		//Make a user set from the given set
 		Set<User> userSet = makeUserSetFromStringSet( ids );
 		//if there is a problem making the userSet (the given set was not valid), return false
@@ -81,6 +96,12 @@ public class SocialNetwork {
 	//Tears down a link between the two users with the ids in the ids set on the given date
 	//returns false if there are any problems
 	public boolean tearDownLink(Set<String> ids, Date date){
+		//Check if the input(s) are null
+		if(ids == null)
+			throw new NullPointerException("The given set of ids is null");
+		if(date == null)
+			throw new NullPointerException("The given date is null");
+		
 		//Make a user set from the given set
 		Set<User> userSet = makeUserSetFromStringSet( ids );
 		//if there is a problem making the userSet, return false
@@ -110,6 +131,12 @@ public class SocialNetwork {
 	
 	//returns whether a link of the users with the given ids is active at a given date
 	public boolean isActive(Set<String> ids, Date date){
+		//Check if the input(s) are null
+		if(ids == null)
+			throw new NullPointerException("The given set of ids is null");
+		if(date == null)
+			throw new NullPointerException("The given date is null");
+		
 		//Make a user set from the given set
 		Set<User> userSet = makeUserSetFromStringSet( ids );
 		//if there is a problem making the userSet, return false

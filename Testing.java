@@ -10,6 +10,9 @@ public class Testing {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		
+		System.out.println("" == null);
+		
+		/*
 		Set<String> s = new HashSet<String>();
 		s.add("Joe");
 		s.add("Barjar");

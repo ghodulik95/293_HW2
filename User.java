@@ -29,7 +29,7 @@ public class User{
 	//sets the user id, throwing nullpointer exception if the given string is null
 	public boolean setID(String id_in) throws NullPointerException{
 		//throw NullPointerException if input string is null
-		if(id_in.compareTo("") == 0){
+		if(id_in == null || id_in.compareTo("") == 0){
 			throw new NullPointerException("Input string must not be null.");
 		}
 		
@@ -58,6 +58,9 @@ public class User{
 	@Override
 	public boolean equals(Object o){
 		// TODO Auto-generated method stub
+		//Check if the input(s) are null
+		if(o == null)
+			throw new NullPointerException("Given object is null.");
 		//if the object is a user, return if the ids of that user and this are equal
 		if(o instanceof User)
 			return this.getID().compareTo(((User)o).getID()) == 0;

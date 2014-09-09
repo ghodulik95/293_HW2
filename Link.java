@@ -29,6 +29,9 @@ public class Link {
 	
 	//sets the users in the link
 	public boolean setUsers(Set<User> users){
+		//Check if the input(s) are null
+		if(users == null)
+			throw new NullPointerException("The given set of users is null.");
 		//if the link is already set or the given set does not have 2 users, return false
 		if(this.isValidLink || users.size() != 2)
 			return false;
@@ -53,6 +56,9 @@ public class Link {
 	
 	//establishes a link
 	public boolean establish(Date date) throws UninitializedObjectException{
+		//Check if the input(s) are null
+		if(date == null)
+			throw new NullPointerException("The given date is null.");
 		//if not valid, throw exception
 		if(!this.isValidLink)
 			throw new UninitializedObjectException("Link user set not initialized");
@@ -70,6 +76,9 @@ public class Link {
 	
 	//tears down a link
 	public boolean tearDown(Date date) throws UninitializedObjectException{
+		//Check if the input(s) are null
+		if(date == null)
+			throw new NullPointerException("The given date is null.");
 		//if not valid, throw exception
 		if(!this.isValidLink)
 			throw new UninitializedObjectException("Link user set not initialized");
@@ -87,6 +96,9 @@ public class Link {
 	
 	//checks whether a link was active at the given date
 	public boolean isActive(Date date) throws UninitializedObjectException{
+		//Check if the input(s) are null
+		if(date == null)
+			throw new NullPointerException("The given date is null.");
 		//if not valid, throw exception
 		if(!this.isValidLink)
 			throw new UninitializedObjectException("Link user set not initialized");
@@ -118,6 +130,9 @@ public class Link {
 	}
 	
 	public Date nextEvent(Date date) throws UninitializedObjectException{
+		//Check if the input(s) are null
+		if(date == null)
+			throw new NullPointerException("The given date is null.");
 		//if not valid, throw exception
 		if(!this.isValidLink)
 			throw new UninitializedObjectException("Link user set not initialized");
