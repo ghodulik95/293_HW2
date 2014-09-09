@@ -45,4 +45,22 @@ public class UserTest {
 		assertEquals("toString() should return readable data (the user's id).", u.toString(), "Bobby");
 		
 	}
+	
+	@Test
+	public void testEquals(){
+		u = new User();
+		u.setID("Bobbb");
+		User u2 = new User();
+		u2.setID("Bobbb");
+		assertEquals("Users with the same id should be equal.", u, u2);
+	}
+	
+	@Test
+	public void testhashCode(){
+		u = new User();
+		u.setID("Bobbb");
+		User u2 = new User();
+		u2.setID("Bobbb");
+		assertEquals("Users with the same id should be equal.", u.hashCode(), u2.hashCode());
+	}
 }
