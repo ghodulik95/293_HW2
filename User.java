@@ -3,6 +3,7 @@
 //USER CLASS
 //This is the user class. It is a data structure containing a unique user id and boolean of if the user is valid.
 //It contains all the required public functions. equals() and hashCode() is also overridden.
+
 public class User{
 	//The unique id
 	private String id;

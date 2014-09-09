@@ -1,3 +1,9 @@
+//George Hodulik
+//gmh73@case.edu
+//SOCIALNETWORK CLASS
+//This is the SocialNetwork class. It is a data structure containing sets of users and links.
+//It contains all the required public functions. 
+
 import java.sql.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,11 +18,14 @@ public class SocialNetwork {
 	private Map<String, User> users;
 	private Map<Set<User>, Link> links;
 	
+	//Constructor instantiaites users and links
 	public SocialNetwork(){
 		users = new HashMap<String, User>();
 		links = new HashMap<Set<User>, Link>();
 	}
 	
+	//adds a user to the users Map
+	//returns false if the user is already in the Map, true otherwise
 	public boolean addUser(User user){
 		if(users.containsKey(user.getID()))
 			return false;
@@ -25,10 +34,12 @@ public class SocialNetwork {
 		return true;
 	}
 	
+	//returns whether the given string is the id of a member
 	public boolean isMember(String id){
 		return users.containsKey( id );
 	}
 	
+	//Returns the user in the network with the given id, null otherwise
 	public User getUser(String id){
 		if(users.containsKey(id))
 			return users.get(id);
@@ -36,6 +47,8 @@ public class SocialNetwork {
 			return null;
 	}
 	
+	//Establishes a link between the two users with the ids in the ids set on the given date
+	//returns false if there are any problems
 	public boolean establishLink(Set<String> ids, Date date){
 		//Make a user set from the given set
 		Set<User> userSet = makeUserSetFromStringSet( ids );
@@ -65,6 +78,8 @@ public class SocialNetwork {
 		}	
 	}
 	
+	//Tears down a link between the two users with the ids in the ids set on the given date
+	//returns false if there are any problems
 	public boolean tearDownLink(Set<String> ids, Date date){
 		//Make a user set from the given set
 		Set<User> userSet = makeUserSetFromStringSet( ids );
@@ -93,6 +108,7 @@ public class SocialNetwork {
 		}	
 	}
 	
+	//returns whether a link of the users with the given ids is active at a given date
 	public boolean isActive(Set<String> ids, Date date){
 		//Make a user set from the given set
 		Set<User> userSet = makeUserSetFromStringSet( ids );

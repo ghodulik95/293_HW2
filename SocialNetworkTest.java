@@ -1,3 +1,9 @@
+//George Hodulik
+//gmh73@case.edu
+//SocialNetwork J UNIT TESTING
+//These are the J unit tests for SocialNetwork.  Each function is named test{function Name}
+//and tests that function name.
+
 import static org.junit.Assert.*;
 import java.sql.Date;
 import java.util.HashSet;
@@ -126,12 +132,14 @@ public class SocialNetworkTest {
 		assertTrue("This link should be active at this time.", s.isActive(makeUserStringSet(u1, u2), Date.valueOf("2012-12-24")));
 	}
 	
+	//makes a user from an id
 	private User makeUser(String id){
 		User u = new User();
 		u.setID(id);
 		return u;
 	}
 	
+	//makes a user set from two string ids
 	private Set<User> makeUserSet(String id1, String id2){
 		User u1 = new User();
 		u1.setID(id1);
@@ -146,6 +154,7 @@ public class SocialNetworkTest {
 		return output;
 	}
 	
+	//makes a set of id strings from two users
 	private Set<String> makeUserStringSet(User u1, User u2){
 		Set<String> output = new HashSet<String>();
 		output.add(u1.getID());
@@ -154,6 +163,7 @@ public class SocialNetworkTest {
 		return output;
 	}
 	
+	//makes a set of id string from two given strings
 	private Set<String> makeUserStringSet(String id1, String id2){
 		Set<String> output = new HashSet<String>();
 		output.add(id1);

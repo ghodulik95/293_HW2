@@ -1,3 +1,10 @@
+//George Hodulik
+//gmh73@case.edu
+//Link J UNIT TESTING
+//These are the J unit tests for Link.  Each function is named test{function Name}
+//and tests that function name.
+//Some of them expect the correct error values.
+
 import static org.junit.Assert.*;
 import java.sql.Date;
 import java.util.HashSet;

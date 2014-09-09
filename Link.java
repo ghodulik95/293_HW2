@@ -1,3 +1,9 @@
+//George Hodulik
+//gmh73@case.edu
+//LINK CLASS
+//This is the Link class. It is a data structure containing a list of dates and the set of corresponding users.
+//It contains all the required public functions. equals() is also overridden.
+
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
