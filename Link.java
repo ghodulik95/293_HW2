@@ -148,6 +148,18 @@ public class Link {
 			}
 		}
 		return dateOutput + "\n" + description;
-		
+	}
+	
+	public boolean isActiveAfterLastLink(){
+		return this.isActiveAfterLastLink;
+	}
+	
+	@Override
+	public boolean equals(Object o){
+		if(o instanceof Link){
+			Link l = (Link) o;
+			return this.linkedUsers.equals(l.linkedUsers);
+		}else
+			return false;
 	}
 }

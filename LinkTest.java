@@ -1,5 +1,4 @@
 import static org.junit.Assert.*;
-
 import java.sql.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -154,6 +153,15 @@ public class LinkTest {
 		//System.out.println(l.toString());
 	}
 	
+	@Test
+	public void testEquals(){
+		l = testEstablishAndTearDown();
+		Link l2 = new Link();
+		l2 = testEstablishAndTearDown();
+		
+		assertTrue("l should equal l2.", l.equals(l2));
+	}
+	
 	//makes a set of users with the given ids
 	private Set<User> makeUserSet(String id1, String id2){
 		User u1 = new User();
@@ -179,4 +187,5 @@ public class LinkTest {
 		}
 		return s;
 	}
+	
 }

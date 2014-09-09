@@ -1,9 +1,9 @@
 
-public class User  {
+public class User{
 	private String id;
 	private boolean isValidUser;
 	
-	public void User(){
+	public User(){
 		isValidUser = false;
 	}
 	
@@ -34,6 +34,20 @@ public class User  {
 			return this.getID();
 		else
 			return "Invalid User: Uninitialized ID";
+	}
+
+	@Override
+	public boolean equals(Object o){
+		// TODO Auto-generated method stub
+		if(o instanceof User)
+			return this.getID().compareTo(((User)o).getID()) == 0;
+		else
+			return false;
+	}
+	
+	@Override
+	public int hashCode(){
+		return this.getID().hashCode();
 	}
 
 }
