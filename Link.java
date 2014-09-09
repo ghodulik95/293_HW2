@@ -5,9 +5,13 @@ import java.util.Set;
 
 
 public class Link {
+	//isValidLink is set to true when the link is given users
 	private boolean isValidLink;
+	//the set of linked users
 	private Set<User> linkedUsers;
+	//isActiveAfterLastLink keeps track of whether the latest event left the link active or inactive
 	private boolean isActiveAfterLastLink;
+	//List of dates for the link
 	private List<Date> dates;
 	
 	//Constructor sets valid to false, active to false, and initializes the date list
@@ -130,17 +134,25 @@ public class Link {
 	}
 	
 	//Print Link
+	//The format I want is :
+	//List of events (ie. "event1, event2, event3") \n
+	//then a description of what is happening, like what is given in the hw
 	public String toString(){
+		//If this is not a valid line, return invalid message
 		if(!this.isValidLink)
 			return "Invalid Link: Uninitialized IDs";
+		//if there are no dates in this link, return a message that says that
 		if(dates.isEmpty())
 			return "There are no events for this link.";
 		
+		//dateOutput is the list of dates, descrption is the description
 		String dateOutput = dates.get(0).toString();
 		String description = "The link was establised on " + dates.get(0).toString();
 		for(int i = 1; i < dates.size(); i++){
+			//ad date to list of dates
 			dateOutput += ", " + dates.get(i).toString();
 			
+			//add a description that corresponds to whether the link is active
 			if(i % 2 == 0){
 				description += ", was re-establised on "+dates.get(i).toString();
 			}else{
@@ -150,10 +162,12 @@ public class Link {
 		return dateOutput + "\n" + description;
 	}
 	
+	//return isActiveAfterLastLink
 	public boolean isActiveAfterLastLink(){
 		return this.isActiveAfterLastLink;
 	}
 	
+	//overrides the equals function so that all that matters is the users (and there ids)
 	@Override
 	public boolean equals(Object o){
 		if(o instanceof Link){

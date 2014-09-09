@@ -6,6 +6,9 @@ import java.util.Set;
 
 
 public class SocialNetwork {
+	//I decided to represent the set of users and links as Maps
+	//I didn't use a Set because there is no get function,
+	//and I wanted constant time for .contains(), so a list would not be optimal
 	private Map<String, User> users;
 	private Map<Set<User>, Link> links;
 	
@@ -114,6 +117,7 @@ public class SocialNetwork {
 		}	
 	}
 	
+	//Makes a user set from a set of ids
 	private Set<User> makeUserSetFromStringSet(Set<String> ids){
 		Object[] idArray = ids.toArray();
 		//If we were not given two user ids, or if one or more of the given users are not one of our users, return false
@@ -124,13 +128,17 @@ public class SocialNetwork {
 		return makeUserSet( (String) idArray[0], (String) idArray[1] );
 	}
 	
+	//Makes a set of users from two strings
 	private Set<User> makeUserSet(String id1, String id2){
+		//build first user
 		User u1 = new User();
 		u1.setID(id1);
 		
+		//build second user
 		User u2 = new User();
 		u2.setID(id2);
 		
+		//build set and return it
 		Set<User> output = new HashSet<User>();
 		output.add(u1);
 		output.add(u2);
