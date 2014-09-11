@@ -103,16 +103,15 @@ public class Link {
 		if(!this.isValidLink)
 			throw new UninitializedObjectException("Link user set not initialized");
 		
-		//loop through the date list until there is a date after the given date
-		//keep track of whether or not the link is active at index i, and return the result
-		int i = 0;
-		//boolean active = false;
 		//while i is within bounds, and the date at i is either before or the same as the given date
+		//iterate through to find the index of the next date
+		int i = 0;
 		while(i < dates.size() && (dates.get(i).before(date) || date.equals(dates.get(i)))){
 			i++;
-			//active = !active;
 		}
-			
+		
+		//The date is active if the index is odd (note that i will equal 0 if the given date
+		//  is before the first date, so when i == 0, it is inactive at given date
 		return i % 2 == 1;
 	}
 	
@@ -126,6 +125,7 @@ public class Link {
 		if(dates.isEmpty())
 			return null;
 		
+		//otherwise return the date at index 0
 		return dates.get(0);
 	}
 	
@@ -137,7 +137,6 @@ public class Link {
 		if(!this.isValidLink)
 			throw new UninitializedObjectException("Link user set not initialized");
 		
-		//start i at one, because you can only have a next event with 2 or more events
 		int i = 0;
 		//while i is within bounds, and the date at i is either before or the same as the given date
 		while(i < dates.size() && (dates.get(i).before(date) || date.equals(dates.get(i)))){
