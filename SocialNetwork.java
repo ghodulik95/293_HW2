@@ -18,7 +18,7 @@ public class SocialNetwork {
 	private Map<String, User> users;
 	private Map<Set<User>, Link> links;
 	
-	//Constructor instantiaites users and links
+	//Constructor instantiates users and links
 	public SocialNetwork(){
 		users = new HashMap<String, User>();
 		links = new HashMap<Set<User>, Link>();
@@ -30,6 +30,8 @@ public class SocialNetwork {
 		//Check if the input(s) are null
 		if(user == null)
 			throw new NullPointerException("The given user is null.");
+		if(!user.isValid())
+			return false;
 		if(users.containsKey(user.getID()))
 			return false;
 		

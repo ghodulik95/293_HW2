@@ -22,6 +22,8 @@ public class SocialNetworkTest {
 		assertFalse("Adding a user that is already in the network should return false.", s.addUser(u));
 		User u2 = makeUser("Bob");
 		assertFalse("Adding a user that is already in the network should return false.", s.addUser(u2));
+		User u3 = new User();
+		assertFalse("Adding an invalid user should return false", s.addUser(u3));
 	}
 	
 	@Test

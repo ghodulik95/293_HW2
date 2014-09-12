@@ -83,6 +83,29 @@ public class LinkTest {
 		return null;
 	}
 	
+	@Test
+	public void testEstablishAndTearDownWithSameDate(){
+		//Events with the same date should be allowed, and when finding
+		//the next date or testing if a date is active, the last date
+		//should be used when there are multiple events with the same date
+		
+		l = new Link();
+		l.setUsers(makeUserSet("Bob", "Bill"));
+		Date date = Date.valueOf("2013-12-12");
+		try{
+			assertTrue("Establishing the first date should return true",l.establish(date));
+			assertTrue("TearingDown on the same date should return true",l.tearDown(date));
+			assertTrue("Establishing on the same date should return true",l.establish(date));
+			assertTrue("The link should be active since the last event was establish", l.isActive(date));
+			assertTrue("Tearing down on the same date should return true", l.tearDown(date));
+			assertFalse("The link should not be active since the last date was tear down", l.isActive(date));
+			assertEquals("The next date should be null since it is the same as the given date", l.nextEvent(date), null);
+		}catch(UninitializedObjectException e){
+			fail("Establishing and tearing down on the same date should not throw an exception");
+		}
+		
+	}
+	
 	@Test(expected=UninitializedObjectException.class)
 	public void testEstablishWhenInvalid() throws UninitializedObjectException{
 		l = new Link();

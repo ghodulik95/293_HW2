@@ -32,7 +32,7 @@ public class Link {
 		//Check if the input(s) are null
 		if(users == null)
 			throw new NullPointerException("The given set of users is null.");
-		//if the link is already set or the given set does not have 2 users, return false
+		//if the link is already set or the given set does not have 2 distinct users, return false
 		if(this.isValidLink || users.size() != 2)
 			return false;
 		
@@ -64,8 +64,7 @@ public class Link {
 			throw new UninitializedObjectException("Link user set not initialized");
 		
 		//if the user is active already, or the last date is before the given date, return false
-		if(this.isActiveAfterLastLink ||  
-				(!dates.isEmpty() && dates.get(dates.size() - 1).after(date)))
+		if(this.isActiveAfterLastLink || !dateIsAfterLastEvent(date))
 			return false;
 		
 		//if there are no problems, add the given date to the date list, set active to true, and return true
@@ -84,14 +83,19 @@ public class Link {
 			throw new UninitializedObjectException("Link user set not initialized");
 		
 		//if the user is already inactive, or the last date is before the given date, return false
-		if(!this.isActiveAfterLastLink ||  
-				(!dates.isEmpty() && dates.get(dates.size() - 1).after(date)))
+		if(!this.isActiveAfterLastLink ||  !dateIsAfterLastEvent(date))
 			return false;
 		
 		//if there are no problems, add the given date to the date list, set active to false, and return true
 		dates.add(date);
 		this.isActiveAfterLastLink = false;
 		return true;
+	}
+	
+	//returns if the date is after ther last recorded event, ie whether or not it
+	//is valid to set up establish or tear down
+	private boolean dateIsAfterLastEvent(Date date){
+		return dates.isEmpty() || !date.before(dates.get(dates.size() - 1));
 	}
 	
 	//checks whether a link was active at the given date
@@ -103,16 +107,22 @@ public class Link {
 		if(!this.isValidLink)
 			throw new UninitializedObjectException("Link user set not initialized");
 		
+		int indexOfNextDate = indexOfNextEvent(date);
+		
+		//The date is active if the index of the next event is odd (note that index will equal 0 if the given date
+		//  is before the first date, so when i == 0, it is inactive at given date
+		return indexOfNextDate % 2 == 1;
+	}
+	
+	//gets the index after the given date
+	private int indexOfNextEvent(Date date){
 		//while i is within bounds, and the date at i is either before or the same as the given date
 		//iterate through to find the index of the next date
 		int i = 0;
 		while(i < dates.size() && (dates.get(i).before(date) || date.equals(dates.get(i)))){
 			i++;
 		}
-		
-		//The date is active if the index is odd (note that i will equal 0 if the given date
-		//  is before the first date, so when i == 0, it is inactive at given date
-		return i % 2 == 1;
+		return i;
 	}
 	
 	//gets the first date
@@ -137,15 +147,11 @@ public class Link {
 		if(!this.isValidLink)
 			throw new UninitializedObjectException("Link user set not initialized");
 		
-		int i = 0;
-		//while i is within bounds, and the date at i is either before or the same as the given date
-		while(i < dates.size() && (dates.get(i).before(date) || date.equals(dates.get(i)))){
-			i++;
-		}
+		int indexOfNextDate = indexOfNextEvent(date);
 		
 		//if there is a date at i and the previous date is the given date, return it
-		if(i < dates.size()){
-			return dates.get(i);
+		if(indexOfNextDate < dates.size()){
+			return dates.get(indexOfNextDate);
 		}
 		//otherwise, there are no dates after the given date, or the given date was not a date we have, so we return null
 		else{
