@@ -10,6 +10,11 @@ public class User{
 	//I thought about having the validity of the user just be whether or not id was null,
 	//but the description of the assignment made it sound like it wanted a boolean value for it.
 	private boolean isValidUser;
+	private String firstName;
+	private String middleName;
+	private String lastName;
+	private String email;
+	private String phoneNumber;
 	
 	/**
 	 * Constructor sets user validity to false
@@ -17,6 +22,145 @@ public class User{
 	public User(){
 		isValidUser = false;
 	}
+	
+	/**
+	 * 
+	 * @param fName		The user's first name
+	 * @return	returns this user
+	 * @throws UninitializedObjectException
+	 */
+	public User setFirstName(String fName) throws UninitializedObjectException{
+		//check input : throw exception if the input is bad or the user isn't valid
+		checkInputAndUser(fName);
+		firstName = fName;
+		return this;
+	}
+	
+	/**
+	 * Sets the user's middle name
+	 * @param mName	the user's middle name
+	 * @return	returns this user
+	 * @throws UninitializedObjectException
+	 */
+	public User setMiddleName(String mName) throws UninitializedObjectException{
+		//check input : throw exception if the input is bad or the user isn't valid
+		checkInputAndUser(mName);
+		middleName = mName;
+		return this;
+	}
+	
+	/**
+	 * Sets the user's last name
+	 * @param lName	the user's last name
+	 * @return	returns this user
+	 * @throws UninitializedObjectException
+	 */
+	public User setLastName(String lName) throws UninitializedObjectException{
+		//check input : throw exception if the input is bad or the user isn't valid
+		checkInputAndUser(lName);
+		lastName = lName;
+		return this;
+	}
+	
+	/**
+	 * Sets the user's email address
+	 * @param e		the user's email address
+	 * @return	returns this user
+	 * @throws UninitializedObjectException
+	 */
+	public User setEmail(String e) throws UninitializedObjectException{
+		//check input : throw exception if the input is bad or the user isn't valid
+		checkInputAndUser(e);
+		email = e;
+		return this;
+	}
+	
+	/**
+	 * Sets the user's phone number
+	 * @param phone	the user's phone number
+	 * @return	returns this user
+	 * @throws UninitializedObjectException
+	 */
+	public User setPhoneNumber(String phone) throws UninitializedObjectException{
+		//check input : throw exception if the input is bad or the user isn't valid
+		checkInputAndUser(phone);
+		phoneNumber = phone;
+		return this;
+	}
+	
+	/**
+	 * Checks if an input string is null or empty, and if the user is valid
+	 * @param input		given input
+	 * @throws UninitializedObjectException		thrown if this user is not valid
+	 */
+	private void checkInputAndUser(String input) throws UninitializedObjectException{
+		if(!this.isValidUser)
+			throw new UninitializedObjectException("User is not valid.");
+		if(this.id == null)
+			throw new NullPointerException("User ID is null");
+		checkInput(input);
+	}
+	
+	private void checkInput(String input){
+		if(input == null || input.compareTo("") == 0)
+			throw new NullPointerException("Given input string is empty");
+	}
+	
+	/**
+	 * Gets the user's first name
+	 * @return
+	 */
+	public String getFirstName(){
+		if(this.firstName == null)
+			return "Not given";
+		else
+			return this.firstName;
+	}
+	
+	/**
+	 * Gets the user's middle name
+	 * @return
+	 */
+	public String getMiddleName(){
+		if(this.middleName == null)
+			return "Not given";
+		else
+			return this.middleName;
+	}
+	
+	/**
+	 * Gets the user's last name
+	 * @return
+	 */
+	public String getLastName(){
+		if(this.lastName == null)
+			return "Not given";
+		else
+			return this.lastName;
+	}
+	
+	/**
+	 * Gets the user's email
+	 * @return
+	 */
+	public String getEmail(){
+		if(this.email == null)
+			return "Not given";
+		else
+			return this.email;
+	}
+	
+	/**
+	 * Gets the user's first name
+	 * @return
+	 */
+	public String getPhoneNumber(){
+		if(this.phoneNumber == null)
+			return "Not given";
+		else
+			return this.phoneNumber;
+	}
+	
 	
 	/**
 	 * 
@@ -42,9 +186,7 @@ public class User{
 	 */
 	public boolean setID(String id_in) throws NullPointerException{
 		//throw NullPointerException if input string is null
-		if(id_in == null || id_in.compareTo("") == 0){
-			throw new NullPointerException("Input string must not be null.");
-		}
+		checkInput(id_in);
 		
 		//if the id is not initialized and the user is not valid, set it to the given id
 		if(id == null && !this.isValidUser){
@@ -59,11 +201,13 @@ public class User{
 	}
 	
 	/**
-	 * toString() is just the user's id
+	 * toString() is the user id and all its information.  Note that information that is not
+	 * given will say "Not given".
 	 */
 	public String toString(){
 		if(this.isValid())
-			return this.getID();
+			return "User "+this.getID()+" :\nFirst name - "+getFirstName()+"\nMiddle name - "+getMiddleName()+"\n" +
+					"Last name - "+getLastName()+"\nEmail - "+getEmail()+"\nPhone Number - "+getPhoneNumber();
 		else
 			return "Invalid User: Uninitialized ID";
 	}
