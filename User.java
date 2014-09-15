@@ -11,22 +11,35 @@ public class User{
 	//but the description of the assignment made it sound like it wanted a boolean value for it.
 	private boolean isValidUser;
 	
-	//Constructor sets user validity to false
+	/**
+	 * Constructor sets user validity to false
+	 */
 	public User(){
 		isValidUser = false;
 	}
 	
-	//returns the validity of the user
+	/**
+	 * 
+	 * @return	returns the validity of the user
+	 */
 	public boolean isValid(){
 		return isValidUser;
 	}
 	
-	//returns the user id
+	/**
+	 * 
+	 * @return	returns the user id
+	 */
 	public String getID(){
 		return id;
 	}
 	
-	//sets the user id, throwing nullpointer exception if the given string is null
+	/**
+	 * sets the user id, throwing nullpointer exception if the given string is null
+	 * @param id_in		the inputted user id
+	 * @return	returns true if the user was successfully set; false if the user was already valid
+	 * @throws NullPointerException		throws if the given string is null
+	 */
 	public boolean setID(String id_in) throws NullPointerException{
 		//throw NullPointerException if input string is null
 		if(id_in == null || id_in.compareTo("") == 0){
@@ -45,7 +58,9 @@ public class User{
 		}
 	}
 	
-	//toString() is just the user's id
+	/**
+	 * toString() is just the user's id
+	 */
 	public String toString(){
 		if(this.isValid())
 			return this.getID();
@@ -53,9 +68,12 @@ public class User{
 			return "Invalid User: Uninitialized ID";
 	}
 	
-	//Two users with the same unique id must be equal, so the equal function
-	//is overridden to have this functionality
+	
 	@Override
+	/**
+	 * Two users with the same unique id must be equal, so the equal function
+	 * is overridden to have this functionality
+	 */
 	public boolean equals(Object o){
 		// TODO Auto-generated method stub
 		//Check if the input(s) are null
@@ -68,10 +86,12 @@ public class User{
 			return false;
 	}
 	
-	//So that checking Set<User>.contains(User u) works correctly,
-	//I had to override the hashCode() function so that it only takes the
-	//id into account
 	@Override
+	/**
+	 * So that checking Set<User>.contains(User u) works correctly,
+	 * I had to override the hashCode() function so that it only takes the
+	 * id into account
+	 */
 	public int hashCode(){
 		return this.getID().hashCode();
 	}

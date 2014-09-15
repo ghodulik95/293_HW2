@@ -20,14 +20,20 @@ public class Link {
 	//List of dates for the link
 	private List<Date> dates;
 	
-	//Constructor sets valid to false, active to false, and initializes the date list
+	/**
+	 * Constructor sets valid to false, active to false, and initializes the date list
+	 */
 	public Link(){
 		isValidLink = false;
 		isActiveAfterLastLink = false;
 		dates = new ArrayList<Date>();
 	}
 	
-	//sets the users in the link
+	/**
+	 * sets the users in the link
+	 * @param users		a set of users
+	 * @return	returns true if the given users are successfully set, and false if the link is already set
+	 */
 	public boolean setUsers(Set<User> users){
 		//Check if the input(s) are null
 		if(users == null)
@@ -41,12 +47,19 @@ public class Link {
 		return true;
 	}
 	
-	//returns if link is valid
+	/**
+	 * 
+	 * @return	returns if link is valid
+	 */
 	public boolean isValid(){
 		return this.isValidLink;
 	}
 	
-	//returns users if valid, throws exception otherwise
+	/**
+	 * 
+	 * @return	returns users if valid, throws exception otherwise
+	 * @throws UninitializedObjectException		if the link is not valid
+	 */
 	public Set<User> getUsers() throws UninitializedObjectException{
 		if(this.isValidLink)
 			return linkedUsers;
@@ -54,7 +67,13 @@ public class Link {
 			throw new UninitializedObjectException("Link user set not initialized");
 	}
 	
-	//establishes a link
+	/**
+	 * establishes a link between set users
+	 * @param date	date of establish event
+	 * @return	returns true if the event is set; returns false if the link is already active or the
+	 * 			date is not after the last event (equal dates are to be considered after)
+	 * @throws UninitializedObjectException		throws if the link is not valid
+	 */
 	public boolean establish(Date date) throws UninitializedObjectException{
 		//Check if the input(s) are null
 		if(date == null)
@@ -73,7 +92,13 @@ public class Link {
 		return true;
 	}
 	
-	//tears down a link
+	/**
+	 * tears down a link
+	 * @param date	date of teardown event
+	 * @return	true if the event is set; returns false if the link is already inactive or the
+	 * 			date is not after the last event (equal dates are to be considered after)
+	 * @throws UninitializedObjectException		throws if the link is not valid
+	 */
 	public boolean tearDown(Date date) throws UninitializedObjectException{
 		//Check if the input(s) are null
 		if(date == null)
@@ -92,13 +117,22 @@ public class Link {
 		return true;
 	}
 	
-	//returns if the date is after ther last recorded event, ie whether or not it
-	//is valid to set up establish or tear down
+	/**
+	 * 
+	 * @param date	a date
+	 * @return	returns if the date is after the last recorded event, ie whether or not it
+	 * 			is valid to set up establish or tear down
+	 */
 	private boolean dateIsAfterLastEvent(Date date){
 		return dates.isEmpty() || !date.before(dates.get(dates.size() - 1));
 	}
 	
-	//checks whether a link was active at the given date
+	/**
+	 * checks whether a link was active at the given date
+	 * @param date	a date
+	 * @return	returns true if the link is active at the given date, false otherwise
+	 * @throws UninitializedObjectException throws if the link is not valid
+	 */
 	public boolean isActive(Date date) throws UninitializedObjectException{
 		//Check if the input(s) are null
 		if(date == null)
@@ -114,7 +148,13 @@ public class Link {
 		return indexOfNextDate % 2 == 1;
 	}
 	
-	//gets the index after the given date
+	/**
+	 * gets the index after the given date
+	 * @param date	a date
+	 * @return	returns the index of the nearest date that is after the given date.
+	 * 			Will return 0 if the given date is before all the recorded dates, and the
+	 * 			size of the list of dates if the given date is after all the recorded dates
+	 */
 	private int indexOfNextEvent(Date date){
 		//while i is within bounds, and the date at i is either before or the same as the given date
 		//iterate through to find the index of the next date
@@ -125,7 +165,12 @@ public class Link {
 		return i;
 	}
 	
-	//gets the first date
+	/**
+	 * gets the first date
+	 * @return	returns the first recorded date
+	 * @throws UninitializedObjectException		throws if the list of dates is not initialized or if
+	 * 											the link is not valid
+	 */
 	public Date firstEvent() throws UninitializedObjectException{
 		//if invalid or the are no dates in our list, throw exception
 		if(dates == null)
@@ -139,6 +184,14 @@ public class Link {
 		return dates.get(0);
 	}
 	
+	/**
+	 * 
+	 * @param date a date
+	 * @return	returns the Date object that is nearest and after the given date
+	 * 			in our list of recorded dates
+	 * @throws UninitializedObjectException		throws if the list of dates is not initialized or if
+	 * 											the link is not valid
+	 */
 	public Date nextEvent(Date date) throws UninitializedObjectException{
 		//Check if the input(s) are null
 		if(date == null)
@@ -159,10 +212,13 @@ public class Link {
 		}
 	}
 	
-	//Print Link
-	//The format I want is :
-	//List of events (ie. "event1, event2, event3") \n
-	//then a description of what is happening, like what is given in the hw
+	
+	/**
+	 * Print Link
+	 * The format I want is :
+	 * List of events (ie. "event1, event2, event3") \n
+	 * then a description of what is happening, like what is given in the hw
+	 */
 	public String toString(){
 		//If this is not a valid line, return invalid message
 		if(!this.isValidLink)
@@ -188,13 +244,18 @@ public class Link {
 		return dateOutput + "\n" + description;
 	}
 	
-	//return isActiveAfterLastLink
+	/**
+	 * return isActiveAfterLastLink
+	 * @return	returns whether or not the link is active after the last recorded event
+	 */
 	public boolean isActiveAfterLastLink(){
 		return this.isActiveAfterLastLink;
 	}
 	
-	//overrides the equals function so that all that matters is the users (and there ids)
 	@Override
+	/**
+	 * overrides the equals function so that all that matters is the users (and there ids)
+	 */
 	public boolean equals(Object o){
 		if(o instanceof Link){
 			Link l = (Link) o;
