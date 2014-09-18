@@ -1,9 +1,19 @@
-//George Hodulik
-//gmh73@case.edu
-//USER CLASS
-//This is the user class. It is a data structure containing a unique user id and boolean of if the user is valid.
-//It contains all the required public functions. equals() and hashCode() is also overridden.
+import java.util.HashSet;
+import java.util.Set;
 
+
+/**
+ * 
+ * @author George Hodulik
+ *	gmh73@case.edu
+ */
+ /*
+ * USER CLASS
+ * This is the user class. It is a data structure containing a unique user id and boolean of if the user is valid.
+ * It contains all the required public functions. equals() and hashCode() is also overridden.
+
+ *
+ */
 public class User{
 	//The unique id
 	private String id;
@@ -108,7 +118,7 @@ public class User{
 	
 	/**
 	 * Gets the user's first name
-	 * @return
+	 * @return returns the user's first name
 	 */
 	public String getFirstName(){
 		if(this.firstName == null)
@@ -119,7 +129,7 @@ public class User{
 	
 	/**
 	 * Gets the user's middle name
-	 * @return
+	 * @return returns the user's middle name
 	 */
 	public String getMiddleName(){
 		if(this.middleName == null)
@@ -130,7 +140,7 @@ public class User{
 	
 	/**
 	 * Gets the user's last name
-	 * @return
+	 * @return returns the user's last name
 	 */
 	public String getLastName(){
 		if(this.lastName == null)
@@ -141,7 +151,7 @@ public class User{
 	
 	/**
 	 * Gets the user's email
-	 * @return
+	 * @return returns the user's email address
 	 */
 	public String getEmail(){
 		if(this.email == null)
@@ -152,7 +162,7 @@ public class User{
 	
 	/**
 	 * Gets the user's first name
-	 * @return
+	 * @return returns the user's phone number
 	 */
 	public String getPhoneNumber(){
 		if(this.phoneNumber == null)
@@ -206,7 +216,7 @@ public class User{
 	 */
 	public String toString(){
 		if(this.isValid())
-			return "User "+this.getID()+" :\nFirst name - "+getFirstName()+"\nMiddle name - "+getMiddleName()+"\n" +
+			return "User "+getID()+" :\nFirst name - "+getFirstName()+"\nMiddle name - "+getMiddleName()+"\n" +
 					"Last name - "+getLastName()+"\nEmail - "+getEmail()+"\nPhone Number - "+getPhoneNumber();
 		else
 			return "Invalid User: Uninitialized ID";
@@ -239,5 +249,98 @@ public class User{
 	public int hashCode(){
 		return this.getID().hashCode();
 	}
+	
+	/**
+	 * Makes a user set from a set of two strings
+	 * @param ids a set of two strings
+	 * @return	returns the set of users with ids given in ids.
+	 * 			returns null if there is a problem
+	 */
+	public static Set<User> makeUserSetFromStringSet(Set<String> ids) {
+		Object[] idArray = ids.toArray();
+		//If we were not given two user ids, return null
+		if(idArray.length != 2){
+			return null;
+		}
+		
+		//If both users are ones that we have, make a userSet for them, and return it
+		return makeUserSet( (String) idArray[0], (String) idArray[1]);
+	}
 
+
+	/**
+	 * Makes a set of two users from two strings that are the user's ids
+	 * @param id1 the id of user 1
+	 * @param id2 the id of user 2
+	 * @return	returns the set of users containing both ids, or null if the ids are the same
+	 */
+	public static Set<User> makeUserSet(String id1, String id2) {
+		if(id1.compareTo(id2) == 0)
+			return null;
+		//build first user
+		User u1 = new User();
+		u1.setID(id1);
+		
+		//build second user
+		User u2 = new User();
+		u2.setID(id2);
+		
+		//build set and return it
+		Set<User> output = new HashSet<User>();
+		output.add(u1);
+		output.add(u2);
+		
+		return output;
+	}
+
+
+
+	/**
+	 * Makes a user set from a set of ids
+	 * @param ids a set containing two user ids
+	 * @param status	a status 
+	 * @return returns the user set from the ids in ids
+	 */
+	public static Set<User> makeUserSetFromStringSet(Set<String> ids, SocialNetworkStatus status){
+		Object[] idArray = ids.toArray();
+		//If we were not given two user ids, return null
+		if(idArray.length != 2 ){
+			status.setStatus(ErrorStatus.INVALID_USERS);
+			return null;
+		}
+		
+		//If both users are ones that we have, make a userSet for them, and return it
+		return makeUserSet( (String) idArray[0], (String) idArray[1] , status);
+	}
+	
+
+	/**
+	 * Makes a set of users from two strings
+	 * @param id1	id of first user
+	 * @param id2	id of second user
+	 * @param status an error status
+	 * @return	returns a set of users with id1 and id2
+	 */
+	public static Set<User> makeUserSet(String id1, String id2, SocialNetworkStatus status){
+		if(id1.compareTo(id2) == 0){
+			status.setStatus(ErrorStatus.INVALID_USERS);
+			return null;
+		}
+		//build first user
+		User u1 = new User();
+		u1.setID(id1);
+		
+		//build second user
+		User u2 = new User();
+		u2.setID(id2);
+		
+		//build set and return it
+		Set<User> output = new HashSet<User>();
+		output.add(u1);
+		output.add(u2);
+		
+		status.setStatus(ErrorStatus.SUCCESS);
+		return output;
+	}
+	
 }

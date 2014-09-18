@@ -1,14 +1,21 @@
-//George Hodulik
-//gmh73@case.edu
-//LINK CLASS
-//This is the Link class. It is a data structure containing a list of dates and the set of corresponding users.
-//It contains all the required public functions. equals() is also overridden.
+
 
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * 
+ * @author George Hodulik
+ *	gmh73@case.edu
+ */
+ /*
+ * LINK CLASS
+ * This is the Link class. It is a data structure containing a list of dates and the set of corresponding users.
+ * It contains all the required public functions. equals() is also overridden.
+ *
+ */
 
 public class Link {
 	//isValidLink is set to true when the link is given users
@@ -32,19 +39,20 @@ public class Link {
 	/**
 	 * sets the users in the link
 	 * @param users		a set of users
-	 * @return	returns true if the given users are successfully set, and false if the link is already set
 	 */
-	public boolean setUsers(Set<User> users){
-		//Check if the input(s) are null
-		if(users == null)
-			throw new NullPointerException("The given set of users is null.");
+	public void setUsers(Set<User> users, SocialNetworkStatus status){
+		//check if the link is valid
+		if(this.isValidLink) 
+			status.setStatus(ErrorStatus.ALREADY_VALID);
 		//if the link is already set or the given set does not have 2 distinct users, return false
-		if(this.isValidLink || users.size() != 2)
-			return false;
-		
-		linkedUsers = users;
-		this.isValidLink = true;
-		return true;
+		else if(users == null || users.size() != 2)
+			status.setStatus(ErrorStatus.INVALID_USERS);
+		//else the link is good for setUsers
+		else{
+			linkedUsers = users;
+			this.isValidLink = true;
+			status.setStatus(ErrorStatus.SUCCESS);
+		}
 	}
 	
 	/**
@@ -70,52 +78,49 @@ public class Link {
 	/**
 	 * establishes a link between set users
 	 * @param date	date of establish event
-	 * @return	returns true if the event is set; returns false if the link is already active or the
-	 * 			date is not after the last event (equal dates are to be considered after)
 	 * @throws UninitializedObjectException		throws if the link is not valid
 	 */
-	public boolean establish(Date date) throws UninitializedObjectException{
-		//Check if the input(s) are null
-		if(date == null)
-			throw new NullPointerException("The given date is null.");
-		//if not valid, throw exception
-		if(!this.isValidLink)
-			throw new UninitializedObjectException("Link user set not initialized");
+	public void establish(Date date, SocialNetworkStatus status) throws UninitializedObjectException{
+		checkIfLinkIsReady(date, status);
 		
-		//if the user is active already, or the last date is before the given date, return false
-		if(this.isActiveAfterLastLink || !dateIsAfterLastEvent(date))
-			return false;
-		
-		//if there are no problems, add the given date to the date list, set active to true, and return true
-		dates.add(date);
-		this.isActiveAfterLastLink = true;
-		return true;
+		//if the user is active already
+		if(this.isActiveAfterLastLink)
+			status.setStatus(ErrorStatus.ALREADY_ACTIVE);
+		//if the date is not after the last date
+		else if(!dateIsAfterLastEvent(date))
+			status.setStatus(ErrorStatus.INVALID_DATE);
+		//else everything is good for establish
+		else{
+			//if there are no problems, add the given date to the date list, set active to true, and return true
+			dates.add(date);
+			this.isActiveAfterLastLink = true;
+			status.setStatus(ErrorStatus.SUCCESS);
+		}
 	}
 	
 	/**
 	 * tears down a link
 	 * @param date	date of teardown event
-	 * @return	true if the event is set; returns false if the link is already inactive or the
-	 * 			date is not after the last event (equal dates are to be considered after)
 	 * @throws UninitializedObjectException		throws if the link is not valid
 	 */
-	public boolean tearDown(Date date) throws UninitializedObjectException{
-		//Check if the input(s) are null
-		if(date == null)
-			throw new NullPointerException("The given date is null.");
-		//if not valid, throw exception
-		if(!this.isValidLink)
-			throw new UninitializedObjectException("Link user set not initialized");
+	public void tearDown(Date date, SocialNetworkStatus status) throws UninitializedObjectException{
+		checkIfLinkIsReady(date, status);
 		
-		//if the user is already inactive, or the last date is before the given date, return false
-		if(!this.isActiveAfterLastLink ||  !dateIsAfterLastEvent(date))
-			return false;
-		
-		//if there are no problems, add the given date to the date list, set active to false, and return true
-		dates.add(date);
-		this.isActiveAfterLastLink = false;
-		return true;
+		//if the user is already inactive
+		if(!this.isActiveAfterLastLink)
+			status.setStatus(ErrorStatus.ALREADY_INACTIVE);
+		//if the date is not after the last date
+		else if(!dateIsAfterLastEvent(date))
+			status.setStatus(ErrorStatus.INVALID_DATE);
+		else{
+			//if there are no problems, add the given date to the date list, set active to false, and return true
+			dates.add(date);
+			this.isActiveAfterLastLink = false;
+			status.setStatus(ErrorStatus.SUCCESS);
+		}
 	}
+	
+	
 	
 	/**
 	 * 
@@ -134,12 +139,7 @@ public class Link {
 	 * @throws UninitializedObjectException throws if the link is not valid
 	 */
 	public boolean isActive(Date date) throws UninitializedObjectException{
-		//Check if the input(s) are null
-		if(date == null)
-			throw new NullPointerException("The given date is null.");
-		//if not valid, throw exception
-		if(!this.isValidLink)
-			throw new UninitializedObjectException("Link user set not initialized");
+		checkIfLinkIsReady(date);
 		
 		int indexOfNextDate = indexOfNextEvent(date);
 		
@@ -172,11 +172,8 @@ public class Link {
 	 * 											the link is not valid
 	 */
 	public Date firstEvent() throws UninitializedObjectException{
-		//if invalid or the are no dates in our list, throw exception
-		if(dates == null)
-			throw new UninitializedObjectException("Link user set not initialized");
-		if(!this.isValidLink)
-			throw new UninitializedObjectException("Link is not valid");
+		checkIfLinkIsReady(dates);
+		
 		if(dates.isEmpty())
 			return null;
 		
@@ -193,12 +190,7 @@ public class Link {
 	 * 											the link is not valid
 	 */
 	public Date nextEvent(Date date) throws UninitializedObjectException{
-		//Check if the input(s) are null
-		if(date == null)
-			throw new NullPointerException("The given date is null.");
-		//if not valid, throw exception
-		if(!this.isValidLink)
-			throw new UninitializedObjectException("Link user set not initialized");
+		checkIfLinkIsReady(date);
 		
 		int indexOfNextDate = indexOfNextEvent(date);
 		
@@ -212,6 +204,40 @@ public class Link {
 		}
 	}
 	
+	/**
+	 * Checks if parameters are null, and also checks if link is valid
+	 * @param param parameter to check if null
+	 * @return	returns true if param is not null and the link is valid
+	 * @throws UninitializedObjectException		thrown if link is invalid
+	 */
+	private boolean checkIfLinkIsReady(Object param) throws UninitializedObjectException{
+		//Check if the input(s) are null
+		if(param == null)
+			throw new NullPointerException("The given parameter is null.");
+		//if not valid, throw exception
+		if(!this.isValidLink)
+			throw new UninitializedObjectException("Link user set not initialized");
+		
+		return true;
+	}
+	
+	/**
+	 * Checks if parameters are null, and also checks if link is valud
+	 * @param param1 parameter to check if null
+	 * @param param2 parameter to check if null
+	 * @return	returns true if params are not null and the link is valid
+	 * @throws UninitializedObjectException		thrown if link is invalid
+	 */
+	private boolean checkIfLinkIsReady(Object param1, Object param2) throws UninitializedObjectException{
+		//Check if the input(s) are null
+		if(param1 == null || param2 == null)
+			throw new NullPointerException("The given parameter is null.");
+		//if not valid, throw exception
+		if(!this.isValidLink)
+			throw new UninitializedObjectException("Link user set not initialized");
+		
+		return true;
+	}
 	
 	/**
 	 * Print Link
@@ -227,6 +253,8 @@ public class Link {
 		if(dates.isEmpty())
 			return "There are no events for this link.";
 		
+		Object[] users = linkedUsers.toArray();
+		String userInfo = "Link betweek Users "+((User)users[0]).getID()+" and " + ((User)users[1]).getID() + "\n";
 		//dateOutput is the list of dates, descrption is the description
 		String dateOutput = dates.get(0).toString();
 		String description = "The link was establised on " + dates.get(0).toString();
@@ -241,7 +269,7 @@ public class Link {
 				description += ", was torn down on "+dates.get(i).toString();
 			}
 		}
-		return dateOutput + "\n" + description;
+		return userInfo + dateOutput + "\n" + description;
 	}
 	
 	/**

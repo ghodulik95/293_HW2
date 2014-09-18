@@ -1,5 +1,8 @@
-//George Hodulik
-//gmh73@case.edu
+/**
+ * 
+ * @author George Hodulik
+ *	gmh73@case.edu
+ */
 //Link J UNIT TESTING
 //These are the J unit tests for Link.  Each function is named test{function Name}
 //and tests that function name.
@@ -14,33 +17,47 @@ import org.junit.Test;
 
 public class LinkTest {
 	Link l;
+	SocialNetworkStatus status;
 	
 	@Test
 	public void testIsValid(){
 		l = new Link();
+		status = new SocialNetworkStatus(ErrorStatus.INVALID_DATE);
 		assertFalse("A new link should not be valid.", l.isValid());
 		Set<User> s = makeUserSet("Bob", "Mary");
-		assertTrue("Setting users should return true when successful", l.setUsers(s));
+		l.setUsers(s, status);
+		assertTrue("Setting users should set status to success when successful", status.getStatus() == ErrorStatus.SUCCESS);
 		assertTrue("A link with users should be valid.", l.isValid());
 	}
 	
 	@Test
 	public void testSetUser(){
 		l = new Link();
-		assertFalse("setUsers should return false when set of users does not have size 2", l.setUsers(new HashSet<User>()));
+		status = new SocialNetworkStatus(ErrorStatus.INVALID_DATE);
+		l.setUsers(new HashSet<User>(), status);
+		assertTrue("setUsers should set status to INVALID_USERS when set of users does not have size 2",
+				status.getStatus() == ErrorStatus.INVALID_USERS);
 		String[] ids = {"Billy", "Joe", "Mary", "Sue", "Marty" };
-		assertFalse("setUsers should return false when the set of users does not have size 2", l.setUsers(makeUserSet(ids)));
-		assertTrue("setUsers should return true when given a set of users size 2, and the link is previously invalid", l.setUsers(makeUserSet("Boe", "Joe")));
+		l.setUsers(makeUserSet(ids), status.setStatus(ErrorStatus.SUCCESS));
+		assertTrue("setUsers should set status to INVALID_USERS when set of users does not have size 2",
+				status.getStatus() == ErrorStatus.INVALID_USERS);
+		l.setUsers(makeUserSet("Boe", "Joe"), status);
+		assertTrue("setUsers should set status to SUCCESS when given a set of users size 2, and the link is previously invalid", 
+				status.getStatus() == ErrorStatus.SUCCESS);
 		assertTrue("Successfully setting the users should make the link valid", l.isValid());
-		assertFalse("Trying to set the users after the link is valid should return false", l.setUsers(makeUserSet(ids)));
-		assertFalse("Trying to set the users after the link is valid should return false", l.setUsers(makeUserSet("Boe", "Joe")));
+		l.setUsers(makeUserSet(ids), status);
+		assertTrue("Trying to set the users after the link is valid should set status to ALREADY_VALID",
+				status.getStatus() == ErrorStatus.ALREADY_VALID);
+		l.setUsers(makeUserSet("Boe", "Joe"), status);
+		assertTrue("Trying to set the users after the link is valid should set status to ALREADY_VALID",
+				status.getStatus() == ErrorStatus.ALREADY_VALID);
 	}
 	
 	@Test
 	public void testGetUsers(){
 		l = new Link();
 		Set<User> userSet = makeUserSet("Bob", "Mary");
-		l.setUsers(userSet);
+		l.setUsers(userSet, new SocialNetworkStatus(ErrorStatus.SUCCESS));
 		try{
 			Set<User> s = l.getUsers();
 			assertTrue("A set containing the original two users should be returned.", s.equals(userSet));
@@ -58,21 +75,30 @@ public class LinkTest {
 	//Not a test, because this builds a good event to test toString()
 	public Link testEstablishAndTearDown(){
 		l = new Link();
-		l.setUsers(makeUserSet("Bob", "Mary"));
+		status = new SocialNetworkStatus(ErrorStatus.SUCCESS);
+		l.setUsers(makeUserSet("Bob", "Mary"), status);
 		try{
 			//First Event
-			assertFalse("Tearing down as the first event should return false", l.tearDown(Date.valueOf("2013-11-2")));
-			assertTrue("Establishing a date as the first event should return true.", l.establish(Date.valueOf("2013-11-2")));
+			l.tearDown(Date.valueOf("2013-11-2"), status);
+			assertEquals("Tearing down as the first event should set status to ALREADY_INCACTIVE", status.getStatus(), ErrorStatus.ALREADY_INACTIVE);
+			l.establish(Date.valueOf("2013-11-2"), status);
+			assertTrue("Establishing a date as the first event should set status to SUCCESS", status.is( ErrorStatus.SUCCESS ));
 			
 			for(int i = 3; i < 30; i++){
 				if( i % 2 == 1){
-					assertFalse("Establishing a date as the "+(i-1)+"th event should return false", l.establish(Date.valueOf("2013-11-"+i)));
-					assertFalse("Tearing down a link before the most recent event should return false",l.tearDown(Date.valueOf("2013-11-"+(i-2))));
-					assertTrue("Tearing down a link after the most recent date in a link should return true.", l.tearDown(Date.valueOf("2013-11-"+i)));
+					l.establish(Date.valueOf("2013-11-"+i), status);
+					assertTrue("Establishing a date as the "+(i-1)+"th event should set status to ALREADY_ACTIVE", status.is( ErrorStatus.ALREADY_ACTIVE));
+					l.tearDown(Date.valueOf("2013-11-"+(i-2)), status);
+					assertTrue("Tearing down a link before the most recent event should set status to INVALID_DATE", status.is( ErrorStatus.INVALID_DATE));
+					l.tearDown(Date.valueOf("2013-11-"+i), status);
+					assertTrue("Tearing down a link after the most recent date in a link should set status to SUCCESS.", status.is( ErrorStatus.SUCCESS ));
 				}else{
-					assertFalse("Tearing down a date as the "+(i-1)+"th event should return false", l.tearDown(Date.valueOf("2013-11-"+i)));
-					assertFalse("Establishing a link before the most recent event should return false",l.establish(Date.valueOf("2013-11-"+(i-2))));
-					assertTrue("Eastablishing a link after the most recent date in a link should return true.", l.establish(Date.valueOf("2013-11-"+i)));
+					l.tearDown(Date.valueOf("2013-11-"+i), status);
+					assertTrue("Tearing down a date as the "+(i-1)+"th event should set status to ALREADY_INACTIVE", status.is( ErrorStatus.ALREADY_INACTIVE));
+					l.establish(Date.valueOf("2013-11-"+(i-2)), status);
+					assertTrue("Establishing a link before the most recent event should set status to INVALID_DATE", status.is( ErrorStatus.INVALID_DATE));
+					l.establish(Date.valueOf("2013-11-"+i), status);
+					assertTrue("Eastablishing a link after the most recent date in a link should set status to SUCCESS.", status.is( ErrorStatus.SUCCESS ));
 				}
 			}
 			
@@ -83,6 +109,11 @@ public class LinkTest {
 		return null;
 	}
 	
+	@Test 
+	public void testEstablishAndTearDownHere(){
+		testEstablishAndTearDown();
+	}
+	
 	@Test
 	public void testEstablishAndTearDownWithSameDate(){
 		//Events with the same date should be allowed, and when finding
@@ -90,14 +121,19 @@ public class LinkTest {
 		//should be used when there are multiple events with the same date
 		
 		l = new Link();
-		l.setUsers(makeUserSet("Bob", "Bill"));
+		status = new SocialNetworkStatus(ErrorStatus.SUCCESS);
+		l.setUsers(makeUserSet("Bob", "Bill"), status);
 		Date date = Date.valueOf("2013-12-12");
 		try{
-			assertTrue("Establishing the first date should return true",l.establish(date));
-			assertTrue("TearingDown on the same date should return true",l.tearDown(date));
-			assertTrue("Establishing on the same date should return true",l.establish(date));
+			l.establish(date, status);
+			assertTrue("Establishing the first date should set status to SUCCESS", status.is( ErrorStatus.SUCCESS));
+			l.tearDown(date,status);
+			assertTrue("TearingDown on the same date should set status to SUCCESS",status.is( ErrorStatus.SUCCESS));
+			l.establish(date, status);
+			assertTrue("Establishing the first date should set status to SUCCESS", status.is( ErrorStatus.SUCCESS));
 			assertTrue("The link should be active since the last event was establish", l.isActive(date));
-			assertTrue("Tearing down on the same date should return true", l.tearDown(date));
+			l.tearDown(date,status);
+			assertTrue("TearingDown on the same date should set status to SUCCESS",status.is( ErrorStatus.SUCCESS));
 			assertFalse("The link should not be active since the last date was tear down", l.isActive(date));
 			assertEquals("The next date should be null since it is the same as the given date", l.nextEvent(date), null);
 		}catch(UninitializedObjectException e){
@@ -109,13 +145,13 @@ public class LinkTest {
 	@Test(expected=UninitializedObjectException.class)
 	public void testEstablishWhenInvalid() throws UninitializedObjectException{
 		l = new Link();
-		l.establish(Date.valueOf("2011-3-3"));
+		l.establish(Date.valueOf("2011-3-3"), new SocialNetworkStatus(ErrorStatus.SUCCESS));
 	}
 	
 	@Test(expected=UninitializedObjectException.class)
 	public void testTearDownWhenInvalid() throws UninitializedObjectException{
 		l = new Link();
-		l.tearDown(Date.valueOf("2011-3-3"));
+		l.tearDown(Date.valueOf("2011-3-3"), new SocialNetworkStatus(ErrorStatus.SUCCESS));
 	}
 	
 	//testIsActive calls testEstablishAndTearDown()

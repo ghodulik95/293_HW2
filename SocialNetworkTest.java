@@ -1,5 +1,9 @@
-//George Hodulik
-//gmh73@case.edu
+/**
+ * 
+ * @author George Hodulik
+ *	gmh73@case.edu
+ */
+
 //SocialNetwork J UNIT TESTING
 //These are the J unit tests for SocialNetwork.  Each function is named test{function Name}
 //and tests that function name.
@@ -13,6 +17,7 @@ import org.junit.Test;
 
 public class SocialNetworkTest {
 	SocialNetwork s;
+	SocialNetworkStatus status;
 	
 	@Test
 	public void testAddUser(){
@@ -64,6 +69,7 @@ public class SocialNetworkTest {
 	@Test
 	public void testEstablishLinkAndTearDownLink(){
 		s = new SocialNetwork();
+		status = new SocialNetworkStatus(ErrorStatus.SUCCESS);
 		User u1 = makeUser("Bob");
 		User u3 = makeUser("Jobe");
 		User u4 = makeUser("Mary");
@@ -80,31 +86,52 @@ public class SocialNetworkTest {
 		names.add(u4.getID());
 		names.add(u5.getID());
 		
-		assertFalse("Trying to establish a link of more than two users should return false.", s.establishLink(names, Date.valueOf("2012-11-13")));
+		s.establishLink(names, Date.valueOf("2012-11-13"), status);
+		assertTrue("Trying to establish a link of more than two users should set status to INVALID_USERS.", 
+				status.is( ErrorStatus.INVALID_USERS));
 		names.remove(u5.getID());
 		names.remove(u4.getID());
 		names.remove(u3.getID());
-		assertFalse("Trying to establish a link of less than two users should return false.", s.establishLink(names, Date.valueOf("2012-11-13")));
+		s.establishLink(names, Date.valueOf("2012-11-13"), status);
+		assertTrue("Trying to establish a link of less than two users should set status to INVALID_USERS.", 
+				status.is( ErrorStatus.INVALID_USERS));
 		names.add(u3.getID());
-		assertTrue("Tring to establish a link of two users should return true.", s.establishLink(names, Date.valueOf("2012-11-13")));
-		assertFalse("Trying to establish a link when the link is already active should return false", s.establishLink(names, Date.valueOf("2012-11-15")));
-		assertTrue("Trying to establish a link of two unlinked users should return true.", s.establishLink(makeUserStringSet(u1,u5), Date.valueOf("2012-12-25")));
-		assertFalse("Trying to establish a link when the link is already active should return false.", s.establishLink(makeUserStringSet(u1,u5), Date.valueOf("2012-12-27")));
+		s.establishLink(names, Date.valueOf("2012-11-13"), status);
+		assertTrue("Tring to establish a link of two users should set status to success.", status.isSuccess());
+		s.establishLink(names, Date.valueOf("2012-11-15"), status);
+		assertTrue("Trying to establish a link when the link is already active should set status to ALREADY_ACTIVE",
+				status.is( ErrorStatus.ALREADY_ACTIVE));
+		s.establishLink(makeUserStringSet(u1,u5), Date.valueOf("2012-12-25"), status);
+		assertTrue("Trying to establish a link of two unlinked users should set status to SUCCESS.", status.isSuccess());
+		s.establishLink(makeUserStringSet(u1,u5), Date.valueOf("2012-12-27"), status);
+		assertTrue("Trying to establish a link when the link is already active should set status to ALREADY_ACTIVE.",
+				status.is( ErrorStatus.ALREADY_ACTIVE));
 	
 		//Now test tear down link
-		assertTrue("Tearing down an active established link should return true", s.tearDownLink(makeUserStringSet(u3,u1), Date.valueOf("2012-11-20")));
-		assertFalse("Tearing down an inactive link should return false", s.tearDownLink(makeUserStringSet(u1,u3), Date.valueOf("2014-12-31")));
+		s.tearDownLink(makeUserStringSet(u3,u1), Date.valueOf("2012-11-20"), status);
+		assertTrue("Tearing down an active established link should set status to SUCCESS", 
+				status.isSuccess());
+		s.tearDownLink(makeUserStringSet(u1,u3), Date.valueOf("2014-12-31"), status);
+		assertTrue("Tearing down an inactive link should set status to ALREADY_INACTIVE", 
+				status.is(ErrorStatus.ALREADY_INACTIVE));
 		names.add(u5.getID());
-		assertFalse("Given invalid input ( > 2 ids in set) to tear down should return false.", s.tearDownLink(names, Date.valueOf("2015-12-12")));
+		s.tearDownLink(names, Date.valueOf("2015-12-12"), status);
+		assertTrue("Given invalid input ( > 2 ids in set) to tear down should set status to INVALID_USERS.", 
+				status.is(ErrorStatus.INVALID_USERS));
 		names.remove(u5.getID());
 		names.remove(u1.getID());
-		assertFalse("Given invalid input ( < 2 ids in set) to tear down should return false.", s.tearDownLink(names, Date.valueOf("2015-12-12")));
-		assertFalse("Trying to tear down a link that doesn't exist should return false.", s.tearDownLink(makeUserStringSet(u1, u4), Date.valueOf("2013-11-12")));
+		s.tearDownLink(names, Date.valueOf("2015-12-12"), status.setStatus(ErrorStatus.SUCCESS));
+		assertTrue("Given invalid input ( < 2 ids in set) to tear down should set status to INVALID_USERS.", 
+				status.is(ErrorStatus.INVALID_USERS));
+		s.tearDownLink(makeUserStringSet(u1, u4), Date.valueOf("2013-11-12"), status);
+		assertTrue("Trying to tear down a link that doesn't exist should set status to ALREADY_INACTIVE.", 
+				status.is(ErrorStatus.ALREADY_INACTIVE));
 	}
 	
 	@Test
 	public void testIsActive(){
 		s = new SocialNetwork();
+		status = new SocialNetworkStatus(ErrorStatus.SUCCESS);
 		assertFalse("A link that doesn't exist should not be active.", s.isActive(makeUserStringSet("Bobby", "Billy"), Date.valueOf("2004-12-3")));
 		User u1 = makeUser("Bob");
 		User u2 = makeUser("Billy");
@@ -114,10 +141,10 @@ public class SocialNetworkTest {
 		s.addUser(u2);
 		s.addUser(u3);
 		
-		s.establishLink(makeUserStringSet(u1, u2), Date.valueOf("2012-12-11"));
-		s.tearDownLink(makeUserStringSet(u2, u1), Date.valueOf("2012-12-15"));
-		s.establishLink(makeUserStringSet(u1, u2), Date.valueOf("2012-12-20"));
-		s.tearDownLink(makeUserStringSet(u1, u2), Date.valueOf("2012-12-25"));
+		s.establishLink(makeUserStringSet(u1, u2), Date.valueOf("2012-12-11"), status);
+		s.tearDownLink(makeUserStringSet(u2, u1), Date.valueOf("2012-12-15"), status);
+		s.establishLink(makeUserStringSet(u1, u2), Date.valueOf("2012-12-20"), status);
+		s.tearDownLink(makeUserStringSet(u1, u2), Date.valueOf("2012-12-25"), status);
 		assertFalse("This link should be inactive at this time.", s.isActive(makeUserStringSet(u1, u2), Date.valueOf("2012-12-09")));
 		assertTrue("This link should be active at this time.", s.isActive(makeUserStringSet(u1, u2), Date.valueOf("2012-12-11")));
 		assertTrue("This link should be active at this time.", s.isActive(makeUserStringSet(u1, u2), Date.valueOf("2012-12-14")));
@@ -139,21 +166,6 @@ public class SocialNetworkTest {
 		User u = new User();
 		u.setID(id);
 		return u;
-	}
-	
-	//makes a user set from two string ids
-	private Set<User> makeUserSet(String id1, String id2){
-		User u1 = new User();
-		u1.setID(id1);
-		
-		User u2 = new User();
-		u2.setID(id2);
-		
-		Set<User> output = new HashSet<User>();
-		output.add(u1);
-		output.add(u2);
-		
-		return output;
 	}
 	
 	//makes a set of id strings from two users

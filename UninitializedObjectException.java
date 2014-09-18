@@ -1,4 +1,8 @@
-//George Hodulik EECS 293 HW2
+/**
+ * 
+ * @author George Hodulik
+ *	gmh73@case.edu
+ */
 //UninitializedObjectException is an exception that is thrown when
 //an object is trying to get called to be used that is not initialized
 //It extends exception, and calls on its super functions
