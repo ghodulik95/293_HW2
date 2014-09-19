@@ -35,8 +35,8 @@ public class SocialNetworkTest {
 	public void testIsMember(){
 		s = new SocialNetwork();
 		User u1 = makeUser("Bob");
-		User u3 = makeUser("Jobe");
-		User u4 = makeUser("Mary");
+		//User u3 = makeUser("Jobe");
+		//User u4 = makeUser("Mary");
 		User u5 = makeUser("Grace");
 		
 		s.addUser(u1);
@@ -53,8 +53,8 @@ public class SocialNetworkTest {
 	public void testGetUser(){
 		s = new SocialNetwork();
 		User u1 = makeUser("Bob");
-		User u3 = makeUser("Jobe");
-		User u4 = makeUser("Mary");
+		//User u3 = makeUser("Jobe");
+		//User u4 = makeUser("Mary");
 		User u5 = makeUser("Grace");
 		
 		s.addUser(u1);

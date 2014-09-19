@@ -58,8 +58,7 @@ public class SocialNetwork {
 	 */
 	public boolean isMember(String id){
 		//Check if the input(s) are null
-		if( id == null || id.compareTo("") == 0 )
-			throw new NullPointerException("The given id is null");
+		checkUserId(id);
 		return users.containsKey( id );
 	}
 	
@@ -70,12 +69,20 @@ public class SocialNetwork {
 	 */
 	public User getUser(String id){
 		//Check if the input(s) are null
-		if( id == null || id.compareTo("") == 0 )
-			throw new NullPointerException("The given id is null");
+		checkUserId(id);
 		if(users.containsKey(id))
 			return users.get(id);
 		else
 			return null;
+	}
+	
+	/**
+	 * Checks if a user id is valid (does not check if the user is in this network)
+	 * @param id A user id
+	 */
+	private void checkUserId(String id){
+		if( id == null || id.compareTo("") == 0 )
+			throw new NullPointerException("The given id is null");
 	}
 	
 	/**
