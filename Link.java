@@ -18,13 +18,13 @@ import java.util.Set;
  */
 
 public class Link {
-	//isValidLink is set to true when the link is given users
+	/** isValidLink is set to true when the link is given users */
 	private boolean isValidLink;
-	//the set of linked users
+	/** the set of linked users */
 	private Set<User> linkedUsers;
-	//isActiveAfterLastLink keeps track of whether the latest event left the link active or inactive
+	/** isActiveAfterLastLink keeps track of whether the latest event left the link active or inactive */
 	private boolean isActiveAfterLastLink;
-	//List of dates for the link
+	/** List of dates for the link */
 	private List<Date> dates;
 	
 	/**
@@ -287,7 +287,7 @@ public class Link {
 	public boolean equals(Object o){
 		if(o instanceof Link){
 			Link l = (Link) o;
-			return this.linkedUsers.equals(l.linkedUsers);
+			return this.linkedUsers.containsAll(l.linkedUsers) && l.linkedUsers.containsAll(this.linkedUsers);
 		}else
 			return false;
 	}

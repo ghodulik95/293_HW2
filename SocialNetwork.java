@@ -20,7 +20,9 @@ public class SocialNetwork {
 	//I decided to represent the set of users and links as Maps
 	//I didn't use a Set because there is no get function,
 	//and I wanted constant time for .contains(), so a list would not be optimal
+	/** Map of users in network */
 	private Map<String, User> users;
+	/** Map of links in network */
 	private Map<Set<User>, Link> links;
 	
 	/**
@@ -65,7 +67,8 @@ public class SocialNetwork {
 	/**
 	 * 
 	 * @param id	a user's id
-	 * @return	Returns the user in the network with the given id, null otherwise
+	 * @return	Returns the user in the network with th
+			return this.linkedUsers.conte given id, null otherwise
 	 */
 	public User getUser(String id){
 		//Check if the input(s) are null

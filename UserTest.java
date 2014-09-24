@@ -53,6 +53,7 @@ public class UserTest {
 	public void testSettersWhenInvalidInput() throws UninitializedObjectException{
 		u = new User();
 		u.setID("An ID");
+		assertEquals(u.getFirstName(), "Not given");
 		u.setFirstName("");
 	}
 	
