@@ -21,7 +21,7 @@ public class SocialNetworkTest {
 	
 	@Test
 	public void testNeighborhood(){
-		boolean viewToStrings = true;
+		boolean viewToStrings = false;
 		User u1 = new User();
 		u1.setID("1");
 		User u2 = new User();
@@ -122,6 +122,12 @@ public class SocialNetworkTest {
 				fail();
 			}
 		}
+		
+		//Check invalidin input
+		s.neighborhood("1", date1, -1,  status);
+		assertTrue(status.is(ErrorStatus.INVALID_DISTANCE));
+		s.neighborhood("12342", date1, status);
+		assertTrue(status.is(ErrorStatus.INVALID_USERS));
 	}
 	
 	@Test

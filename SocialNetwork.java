@@ -295,7 +295,7 @@ public class SocialNetwork {
 	 */
 	public Set<Friend> neighborhood(String id, Date date, SocialNetworkStatus status){
 		//Just call the other neighborhood function with the max value set to be Integer's max value
-		return this.neighborhood(id, date, Integer.MAX_VALUE,status);
+		return this.neighborhood(id, date, Integer.MAX_VALUE, status);
 	}
 	
 	/**
@@ -319,28 +319,16 @@ public class SocialNetwork {
 		//Instantiate our output set
 		Set<Friend> friends = new HashSet<Friend>();
 		
-		//Add the given user to the neighborhood with distance 0
-		//as specified by the assignment
-		User u = users.get(id);
-		Friend origUser = new Friend();
-		origUser.set(u, 0);
-		friends.add(origUser);
+		//Find the friends of user id
+		findFriends(id, friends, date, distance_max, status);
 		
-		//Make a queue of all the direct links to the given user
-		Queue<Friend> newFriends = new LinkedList<Friend>();
-		newFriends.addAll(getAllImmediateFriends(id, date, friends, 1, status));
-		
-		//Add the other, indirect links to neighborhood
-		//there is no maximum distance in this method, so make the max be Integer's max
-		findAllNonImmediateFriends(friends, newFriends, date, distance_max, status);
-		
-		//if there was a problem, return null
-		if(!status.isSuccess()){
+		//if there was not a problem, return the neighborhood
+		if(status.isSuccess()){
+			return friends;
+		}else{
+			//else return null
 			return null;
 		}
-		
-		//return the neighborhood
-		return friends;
 	}
 	
 	/**
@@ -350,11 +338,18 @@ public class SocialNetwork {
 	 * @param date	the date
 	 * @param status	status variable
 	 */
-	private void findAllNonImmediateFriends(Set<Friend> friends, Queue<Friend> immediateFriends, Date date, int distance_max,
-			SocialNetworkStatus status){
+	private void findFriends(String originId, Set<Friend> friends, Date date, int distance_max, SocialNetworkStatus status){
+		//Make a queue of friends
+		Queue<Friend> newFriends = new LinkedList<Friend>();
+		
+		//Add the origin user to the queue
+		User u = users.get(originId);
+		Friend origUser = new Friend();
+		origUser.set(u, 0);
+		newFriends.add(origUser);
 		try{
 			//Get the first friend in the queue
-			Friend tempF = immediateFriends.poll();
+			Friend tempF = newFriends.poll();
 			
 			//while there are still friends in the queue, the status is success, and we are within max distance
 			int distance = -1;
@@ -368,7 +363,7 @@ public class SocialNetwork {
 						//these immediate friends have a distance to our original user of 1 more than this friend
 					distance = tempF.getDistance() + 1;
 					String friendID = tempF.getUser().getID();
-					immediateFriends.addAll(getAllImmediateFriends(friendID, date, friends, distance, status));
+					newFriends.addAll(getAllImmediateFriends(friendID, date, friends, distance, status));
 				}else{
 					//May need to add a way to check if this friends distance
 					//is less than the current, but due to the nature of this 
@@ -377,13 +372,22 @@ public class SocialNetwork {
 				}
 				
 				//Do the same to the next friend in the queue
-				tempF = immediateFriends.poll();
+				tempF = newFriends.poll();
 			}
 		}catch(Exception e){
 			status.setStatus(ErrorStatus.INVALID_USERS);
 		}
 	}
 	
+	/**
+	 * Checks if the neighborhood is complete.  It is complete when either the next friend
+	 * is null, the distance exceeds the specified max, or the if the status is not successful
+	 * @param f		the next friend on the queue
+	 * @param distance	the current distance
+	 * @param distance_max	teh specified max distance
+	 * @param status	the current status
+	 * @return		returns true if there are still more friends in queue
+	 */
 	private boolean neighborhoodIsNotFinished(Friend f, int distance, int distance_max, SocialNetworkStatus status){
 		return f != null && status.isSuccess() && distance <= distance_max;
 	}
@@ -427,14 +431,13 @@ public class SocialNetwork {
 	 */
 	private void addFoundFriend(String id, Set<User> usersInLink, int distance, LinkedList<Friend> foundFriends) throws UninitializedObjectException{
 		Friend tempF = new Friend();
-		OTHER_USER_FOUND:
 		for(User u : usersInLink){
 			if(u.getID().compareTo(id) != 0){
 				tempF.set(u, distance);
-				break OTHER_USER_FOUND;
+				foundFriends.add(tempF);
+				return;
 			}
 		}
-		foundFriends.add(tempF);
 	}
 	
 	/**

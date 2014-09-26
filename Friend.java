@@ -95,12 +95,16 @@ public class Friend {
 		}
 	}
 	
+	/**
+	 * Override Friend equals.  A Friend only equals another Friend object with the same id.
+	 * We can make the assumption that only friends with respect to the same user are being compared.
+	 */
 	@Override
 	public boolean equals(Object o){
 		try{
 			if(o instanceof Friend){
 				Friend f = (Friend) o;
-				return f.getUser().getID().compareTo(user.getID()) == 0;
+				return f.getUser().equals(user);
 			}else
 				return false;
 		}catch(Exception e){
@@ -108,6 +112,10 @@ public class Friend {
 		}
 	}
 	
+	/**
+	 * Override hashCode so that when using contains() in sets, it'll work.
+	 * The hashCode is simply the hashCode() of the user this Friend holds.
+	 */
 	@Override
 	public int hashCode(){
 		return user.hashCode();
