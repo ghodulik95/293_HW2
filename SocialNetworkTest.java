@@ -20,6 +20,111 @@ public class SocialNetworkTest {
 	SocialNetworkStatus status;
 	
 	@Test
+	public void testNeighborhood(){
+		boolean viewToStrings = true;
+		User u1 = new User();
+		u1.setID("1");
+		User u2 = new User();
+		u2.setID("2");
+		User u3 = new User();
+		u3.setID("3");
+		
+		s = new SocialNetwork();
+		status = new SocialNetworkStatus(ErrorStatus.SUCCESS);
+		
+		s.addUser(u1); s.addUser(u2); s.addUser(u3);
+		Set<String> u1Andu2 = new HashSet<String>();
+		u1Andu2.add("1"); u1Andu2.add("2");
+		
+		//Test if a neighborhood of 2 is formed
+		Date date1 = Date.valueOf("2013-11-12");
+		s.establishLink(u1Andu2, date1, status);
+		Set<Friend> neighborhood = s.neighborhood("1", date1, status);
+		assertTrue("The neighborhood should have been successful.", status.isSuccess());
+		for(Friend f : neighborhood){
+			if(viewToStrings) System.out.println(f.toString());
+		}
+		
+		//Test if a neighborhood of 2 is formed
+		Set<String> u2Andu3 = new HashSet<String>();
+		u2Andu3.add("2"); u2Andu3.add("3");
+		s.establishLink(u2Andu3, date1, status);
+		neighborhood = s.neighborhood("1", date1, status);
+		assertTrue("The neighborhood should have been successful.", status.isSuccess());
+		if(viewToStrings) System.out.println("\nTest 2-----");
+		for(Friend f : neighborhood){
+			if(viewToStrings) System.out.println(f.toString());
+		}
+		
+		//Test if a neighborhood of 2 is formed, but this time both should have distances of 0.
+		Set<String> u1Andu3 = new HashSet<String>();
+		u1Andu3.add("1"); u1Andu3.add("3");
+		s.establishLink(u1Andu3, date1, status);
+		neighborhood = s.neighborhood("1", date1, status);
+		assertTrue("The neighborhood should have been successful.", status.isSuccess());
+		if(viewToStrings) System.out.println("\nTest 3-----");
+		for(Friend f : neighborhood){
+			if(viewToStrings) System.out.println(f.toString());
+			try{
+				if(f.getUser().getID().compareTo("1") != 0)
+					assertTrue("Distance of friends should all be 1 here.", f.getDistance() == 1);
+			}catch(Exception e){
+				fail();
+			}
+		}
+		
+		//Test if a neighborhood of 2 is formed, but this time one distance should be 2 again
+		//because we tear down a link, and torn down links should not count.
+		s.tearDownLink(u1Andu3, date1, status);
+		neighborhood = s.neighborhood("1", date1, status);
+		assertTrue("The neighborhood should have been successful.", status.isSuccess());
+		if(viewToStrings) System.out.println("\nTest 4-----");
+		for(Friend f : neighborhood){
+			if(viewToStrings) System.out.println(f.toString());
+		}
+		//s.establishLink(u1Andu3, date1, status);
+		
+		//Now I will make a longer link and I want to see if the distance is correct
+		for(int i = 4; i < 10; i++){
+			User user = new User();
+			user.setID(String.valueOf(i));
+			s.addUser(user);
+			Set<String> idSet = new HashSet<String>();
+			idSet.add(String.valueOf(i));
+			idSet.add(String.valueOf(i - 1));
+			s.establishLink(idSet, date1, status);
+		}
+		
+		neighborhood = s.neighborhood("1", date1, status);
+		assertTrue("The neighborhood should have been successful.", status.isSuccess());
+		if(viewToStrings) System.out.println("\nTest 5-----");
+		for(Friend f : neighborhood){
+			if(viewToStrings) System.out.println(f.toString());
+			try{
+				int id = Integer.valueOf(f.getUser().getID());
+				assertTrue(f.getDistance() == id - 1);
+			}catch(Exception e){
+				fail();
+			}
+		}
+		
+		//Now I will test with a specified max distance
+		neighborhood = s.neighborhood("1", date1, 3, status);
+		assertTrue("The neighborhood should have been successful.", status.isSuccess());
+		if(viewToStrings) System.out.println("\nTest 5-----");
+		for(Friend f : neighborhood){
+			if(viewToStrings) System.out.println(f.toString());
+			try{
+				int id = Integer.valueOf(f.getUser().getID());
+				assertTrue(f.getDistance() == id - 1);
+				assertTrue(f.getDistance() <= 3);
+			}catch(Exception e){
+				fail();
+			}
+		}
+	}
+	
+	@Test
 	public void testAddUser(){
 		s = new SocialNetwork();
 		User u = makeUser("Bob");

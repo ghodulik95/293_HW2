@@ -1,8 +1,12 @@
 
 
 import java.sql.Date;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 /**
@@ -46,7 +50,7 @@ public class SocialNetwork {
 			throw new NullPointerException("The given user is null.");
 		if(!user.isValid())
 			return false;
-		if(users.containsKey(user.getID()))
+		if(isInSocialNetwork(user.getID()))
 			return false;
 		
 		users.put(user.getID(), user);
@@ -61,7 +65,11 @@ public class SocialNetwork {
 	public boolean isMember(String id){
 		//Check if the input(s) are null
 		checkUserId(id);
-		return users.containsKey( id );
+		return isInSocialNetwork( id );
+	}
+	
+	private boolean isInSocialNetwork(String id){
+		return users.containsKey(id);
 	}
 	
 	/**
@@ -73,7 +81,7 @@ public class SocialNetwork {
 	public User getUser(String id){
 		//Check if the input(s) are null
 		checkUserId(id);
-		if(users.containsKey(id))
+		if(isInSocialNetwork(id))
 			return users.get(id);
 		else
 			return null;
@@ -94,7 +102,7 @@ public class SocialNetwork {
 	 * @param date	a date
 	 */
 	public void establishLink(Set<String> ids, Date date, SocialNetworkStatus status){
-		checkParams(ids, date, status);
+		checkParamsNotNull(ids, date, status);
 		//Make a user set from the given set
 		Set<User> userSet = makeUserSetFromStringSet( ids , status);
 		if(!status.isSuccess())
@@ -116,8 +124,8 @@ public class SocialNetwork {
 	/**
 	 * Gets the link for an establish event.  Sets status to corresponding
 	 * values when there are errors.
-	 * @param userSet
-	 * @param status
+	 * @param userSet	a ser of Users
+	 * @param status	a SocialNetworkStatus
 	 * @return returns the link, or null if the activity of the link does not work
 	 */
 	private Link getLinkForEstablish(Set<User> userSet, SocialNetworkStatus status){
@@ -138,12 +146,12 @@ public class SocialNetwork {
 	
 	/**
 	 * Check if parameters are null
-	 * @param ids
-	 * @param date
-	 * @param status
+	 * @param ids	a set of string ids
+	 * @param date	a date
+	 * @param status	a SocialNetworkStatus
 	 * @return returns true if the parameters are not null
 	 */
-	private boolean checkParams(Set<String> ids, Date date, SocialNetworkStatus status){
+	private boolean checkParamsNotNull(Object ids, Date date, SocialNetworkStatus status){
 		//Check if the input(s) are null
 		if(ids == null)
 			throw new NullPointerException("The given set of ids is null");
@@ -157,11 +165,11 @@ public class SocialNetwork {
 	
 	/**
 	 * Check if parameters are null
-	 * @param ids
-	 * @param date
+	 * @param ids	a set of user ids
+	 * @param date	a date
 	 * @return	returns true if the parameters are not null
 	 */
-	private boolean checkParams(Set<String> ids, Date date){
+	private boolean checkParamsNotNull(Set<String> ids, Date date){
 		//Check if the input(s) are null
 		if(ids == null)
 			throw new NullPointerException("The given set of ids is null");
@@ -176,7 +184,7 @@ public class SocialNetwork {
 	 * @param date	a date
 	 */
 	public void tearDownLink(Set<String> ids, Date date, SocialNetworkStatus status){
-		checkParams(ids, date, status);
+		checkParamsNotNull(ids, date, status);
 		
 		//Make a user set from the given set
 		Set<User> userSet = makeUserSetFromStringSet( ids, status );
@@ -199,8 +207,8 @@ public class SocialNetwork {
 	/**
 	 * Gets the link for a tear down event.  Sets status to corresponding
 	 * values when there are errors.
-	 * @param userSet
-	 * @param status
+	 * @param userSet	a set of users
+	 * @param status	a SocialNetworkStatus
 	 * @return returns the link, or null if hte activity of the link does not work
 	 */
 	private Link getLinkForTearDown(Set<User> userSet, SocialNetworkStatus status){
@@ -227,7 +235,7 @@ public class SocialNetwork {
 	 */
 	public boolean isActive(Set<String> ids, Date date){
 		//Check if the input(s) are null
-		checkParams(ids, date);
+		checkParamsNotNull(ids, date);
 		
 		//Make a user set from the given set
 		Set<User> userSet = makeUserSetFromStringSet( ids );
@@ -253,14 +261,203 @@ public class SocialNetwork {
 	}
 	
 	/**
+	 * Checks if the given id is valid and in the network
+	 * @param id	given id to check
+	 * @param status	sets status to INVALID_USER if user id is invalid
+	 */
+	private void checkId(String id, SocialNetworkStatus status){
+		//check id id is null or not in network
+		checkUserId(id);
+		if(!isInSocialNetwork(id)){
+			status.setStatus(ErrorStatus.INVALID_USERS);
+		}
+	}
+	
+	/**
+	 * Checks if the maximum distance specified is valid
+	 * @param distance_max	max distance
+	 * @param status	set status to INVALID_DISTANCE if it is invalid
+	 */
+	private void checkMaxDistance(int distance_max, SocialNetworkStatus status){
+		//check if max distance is positive
+		if(distance_max < 0){
+			status.setStatus(ErrorStatus.INVALID_DISTANCE);
+		}
+	}
+	
+	/**
+	 * Finds the neighborhood of user with id id
+	 * @param id	The user id
+	 * @param date	A date
+	 * @param status	status variable
+	 * @return	returns a set of Friends related to this user with an active
+	 * 			direct or indirect connection to the given user at date date
+	 */
+	public Set<Friend> neighborhood(String id, Date date, SocialNetworkStatus status){
+		//Just call the other neighborhood function with the max value set to be Integer's max value
+		return this.neighborhood(id, date, Integer.MAX_VALUE,status);
+	}
+	
+	/**
+	 * Finds the neighborhood of user with id id and a specified max distance
+	 * @param id	The user id
+	 * @param date	A date
+	 * @param distance_max the specified maximum distance a Friend can have
+	 * @param status	status variable
+	 * @return	returns a set of Friends related to this user with an active
+	 * 			direct or indirect connection to the given user at date date
+	 */
+	public Set<Friend> neighborhood(String id, Date date, int distance_max, SocialNetworkStatus status){
+		checkParamsNotNull(id, date, status);
+		checkId(id, status);
+		checkMaxDistance(distance_max, status);
+		
+		if(!status.isSuccess()){
+			return null;
+		}
+		
+		//Instantiate our output set
+		Set<Friend> friends = new HashSet<Friend>();
+		
+		//Add the given user to the neighborhood with distance 0
+		//as specified by the assignment
+		User u = users.get(id);
+		Friend origUser = new Friend();
+		origUser.set(u, 0);
+		friends.add(origUser);
+		
+		//Make a queue of all the direct links to the given user
+		Queue<Friend> newFriends = new LinkedList<Friend>();
+		newFriends.addAll(getAllImmediateFriends(id, date, friends, 1, status));
+		
+		//Add the other, indirect links to neighborhood
+		//there is no maximum distance in this method, so make the max be Integer's max
+		findAllNonImmediateFriends(friends, newFriends, date, distance_max, status);
+		
+		//if there was a problem, return null
+		if(!status.isSuccess()){
+			return null;
+		}
+		
+		//return the neighborhood
+		return friends;
+	}
+	
+	/**
+	 * Given a set of immediate friends and a date, finds all the non-immediate friends
+	 * @param friends	The set of friends that the new friends are added to
+	 * @param immediateFriends	a queue of immediate friends of the user (original user is not known by this function)
+	 * @param date	the date
+	 * @param status	status variable
+	 */
+	private void findAllNonImmediateFriends(Set<Friend> friends, Queue<Friend> immediateFriends, Date date, int distance_max,
+			SocialNetworkStatus status){
+		try{
+			//Get the first friend in the queue
+			Friend tempF = immediateFriends.poll();
+			
+			//while there are still friends in the queue, the status is success, and we are within max distance
+			int distance = -1;
+			while(neighborhoodIsNotFinished(tempF, distance, distance_max, status)){
+				//if the set of friends contains the polled friend in queue
+				if(!friends.contains(tempF)){
+					//add the friend to our set
+					friends.add(tempF);
+					
+					//find all the immediate friends to this user
+						//these immediate friends have a distance to our original user of 1 more than this friend
+					distance = tempF.getDistance() + 1;
+					String friendID = tempF.getUser().getID();
+					immediateFriends.addAll(getAllImmediateFriends(friendID, date, friends, distance, status));
+				}else{
+					//May need to add a way to check if this friends distance
+					//is less than the current, but due to the nature of this 
+					//algorithm, I think the current distance could only be
+					//greater than or equal to the recorded distance
+				}
+				
+				//Do the same to the next friend in the queue
+				tempF = immediateFriends.poll();
+			}
+		}catch(Exception e){
+			status.setStatus(ErrorStatus.INVALID_USERS);
+		}
+	}
+	
+	private boolean neighborhoodIsNotFinished(Friend f, int distance, int distance_max, SocialNetworkStatus status){
+		return f != null && status.isSuccess() && distance <= distance_max;
+	}
+	
+	/**
+	 * Returns a LinkedList of all the immediate friends of the user with id id
+	 * @param id	The user's id
+	 * @param date	A date to test if active link
+	 * @param friends	The set of friends we already have found
+	 * @param distance	the distance that these found friends will have assigned to them
+	 * @param status	the status variable
+	 * @return	Returns a LinkedList of all the immediate friends of the user with id id
+	 */
+	private LinkedList<Friend> getAllImmediateFriends(String id, Date date, Set<Friend> friends, int distance,SocialNetworkStatus status){
+		//Get all the links in the network as a collection so we can iterate it
+		Collection<Link> allLinks = links.values();
+		//Initialize our output
+		LinkedList<Friend> foundFriends = new LinkedList<Friend>();
+		try{
+			//for each of our links, add the other user in the link whenever
+			//the link is active AND one of the users is the given one
+			for(Link l : allLinks){
+				Set<User> usersInLink = l.getUsers();
+				if( l.isActive(date) && oneUserHasId(id, usersInLink))
+					addFoundFriend(id, usersInLink, distance, foundFriends);
+			}
+			status.setStatus(ErrorStatus.SUCCESS);
+		}catch(UninitializedObjectException e){
+			status.setStatus(ErrorStatus.INVALID_USERS);
+		}
+		return foundFriends;
+	}
+	
+	/**
+	 * Adds the user that in the given set that does not have the given id to foundFriends with given distance
+	 * @param id	id not to include (the original id)
+	 * @param usersInLink	the users from a link
+	 * @param distance	the distance to assign this friend
+	 * @param foundFriends	the list of friends to add this new friend to
+	 * @throws UninitializedObjectException		thrown if the friend is invalid
+	 */
+	private void addFoundFriend(String id, Set<User> usersInLink, int distance, LinkedList<Friend> foundFriends) throws UninitializedObjectException{
+		Friend tempF = new Friend();
+		OTHER_USER_FOUND:
+		for(User u : usersInLink){
+			if(u.getID().compareTo(id) != 0){
+				tempF.set(u, distance);
+				break OTHER_USER_FOUND;
+			}
+		}
+		foundFriends.add(tempF);
+	}
+	
+	/**
+	 * Returns true when the given string id is the id of one of the users in the given set
+	 * @param id	the id we are checking
+	 * @param userSet	the set of users we are checking
+	 * @return	Returns true when the given string id is the id of one of the users in the given set
+	 */
+	private boolean oneUserHasId(String id, Set<User> userSet){
+		User u = new User();
+		u.setID(id);
+		return userSet.contains(u);
+	}	
+	
+	/**
 	 * Makes user set from a set of id Strings using User static function
 	 * @param ids
 	 * @return returns a set of users with the ids in the set ids
 	 */
 	private Set<User> makeUserSetFromStringSet(Set<String> ids) {
-		Object[] idArray = ids.toArray();
+		String[] idArray = ids.toArray(new String[0]);
 		//If we were not given two user ids, or if one or more of the given users are not one of our users, return false
-		if(idArray.length != 2 || !(users.containsKey((String)idArray[0]) && users.containsKey((String)idArray[1]))){
+		if(idsAreInvalid(idArray)){
 			return null;
 		}
 		
@@ -274,15 +471,27 @@ public class SocialNetwork {
 	 * @return returns the user set from the ids in ids
 	 */
 	private Set<User> makeUserSetFromStringSet(Set<String> ids, SocialNetworkStatus status){
-		Object[] idArray = ids.toArray();
+		String[] idArray = ids.toArray(new String[0]);
 		//If we were not given two user ids, or if one or more of the given users are not one of our users, return false
-		if(idArray.length != 2 || !(users.containsKey((String)idArray[0]) && users.containsKey((String)idArray[1]))){
+		if(idsAreInvalid(idArray)){
 			status.setStatus(ErrorStatus.INVALID_USERS);
 			return null;
 		}
 		
 		//If both users are ones that we have, make a userSet for them, and return it
 		return User.makeUserSet( (String) idArray[0], (String) idArray[1] , status);
+	}
+	
+	/**
+	 * Returns true if an array of user id strings is of length 2, and both users are in this social network,
+	 * and both ids are not the same.
+	 * @param idArray an array of user id strings
+	 * @return	Returns true if an array of user id strings is of length 2, and both users are in this social network,
+	 * 			and both ids are not the same.
+	 */
+	private boolean idsAreInvalid(String[] idArray){
+		return idArray.length != 2 || !((isInSocialNetwork(idArray[0]) && isInSocialNetwork(idArray[1])))
+				|| idArray[0].compareTo(idArray[1]) == 0;
 	}
 	
 }

@@ -104,11 +104,19 @@ public class User{
 	 * @throws UninitializedObjectException		thrown if this user is not valid
 	 */
 	private void checkInputAndUser(String input) throws UninitializedObjectException{
+		checkUser();
+		checkInput(input);
+	}
+	
+	/**
+	 * Checks if the user is valid and the id is not null
+	 * @throws UninitializedObjectException		thrown if the user is invalid
+	 */
+	private void checkUser() throws UninitializedObjectException{
 		if(!this.isValidUser)
 			throw new UninitializedObjectException("User is not valid.");
 		if(this.id == null)
 			throw new NullPointerException("User ID is null");
-		checkInput(input);
 	}
 	
 	private void checkInput(String input){

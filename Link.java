@@ -141,11 +141,21 @@ public class Link {
 	public boolean isActive(Date date) throws UninitializedObjectException{
 		checkIfLinkIsReady(date);
 		
-		int indexOfNextDate = indexOfNextEvent(date);
+		//The index of the date is the index before the next date's index
+		int index = indexOfNextEvent(date) - 1;
 		
 		//The date is active if the index of the next event is odd (note that index will equal 0 if the given date
 		//  is before the first date, so when i == 0, it is inactive at given date
-		return indexOfNextDate % 2 == 1;
+		return isActiveIndex(index);
+	}
+	
+	/**
+	 * Returns if the index is an active index.  An index is active if it is even
+	 * @param index the index of a date
+	 * @return	returns true if the index is an active one.
+	 */
+	private boolean isActiveIndex(int index){
+		return index % 2 == 0;
 	}
 	
 	/**
@@ -263,7 +273,7 @@ public class Link {
 			dateOutput += ", " + dates.get(i).toString();
 			
 			//add a description that corresponds to whether the link is active
-			if(i % 2 == 0){
+			if(isActiveIndex(i)){
 				description += ", was re-establised on "+dates.get(i).toString();
 			}else{
 				description += ", was torn down on "+dates.get(i).toString();

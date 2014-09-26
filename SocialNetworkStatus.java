@@ -12,7 +12,7 @@ public class SocialNetworkStatus {
 		
 		/**
 		 * Constructor sets status to s
-		 * @param s
+		 * @param s		An error Status
 		 */
 	    public SocialNetworkStatus(ErrorStatus s){
 	    	status = s;
@@ -20,7 +20,7 @@ public class SocialNetworkStatus {
 	    
 	    /**
 	     * set status to s
-	     * @param s
+	     * @param s		An ErrorStatus
 	     * @return returns this SocialNetworkStatus after status change
 	     */
 	    public SocialNetworkStatus setStatus(ErrorStatus s){
