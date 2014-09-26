@@ -317,14 +317,14 @@ public class SocialNetwork {
 		}
 		
 		//Instantiate our output set
-		Set<Friend> friends = new HashSet<Friend>();
+		Set<Friend> neighborhood = new HashSet<Friend>();
 		
 		//Find the friends of user id
-		findFriends(id, friends, date, distance_max, status);
+		findFriends(id, date, distance_max, neighborhood, status);
 		
 		//if there was not a problem, return the neighborhood
 		if(status.isSuccess()){
-			return friends;
+			return neighborhood;
 		}else{
 			//else return null
 			return null;
@@ -333,37 +333,37 @@ public class SocialNetwork {
 	
 	/**
 	 * Given a set of immediate friends and a date, finds all the non-immediate friends
-	 * @param friends	The set of friends that the new friends are added to
+	 * @param currNeighborhood	The set of friends that the new friends are added to
 	 * @param immediateFriends	a queue of immediate friends of the user (original user is not known by this function)
 	 * @param date	the date
 	 * @param status	status variable
 	 */
-	private void findFriends(String originId, Set<Friend> friends, Date date, int distance_max, SocialNetworkStatus status){
+	private void findFriends(String originId, Date date, int distance_max, Set<Friend> currNeighborhood, SocialNetworkStatus status){
 		//Make a queue of friends
 		Queue<Friend> newFriends = new LinkedList<Friend>();
 		
-		//Add the origin user to the queue
+		//Make a Friend for the original user from the originId
 		User u = users.get(originId);
 		Friend origUser = new Friend();
 		origUser.set(u, 0);
-		newFriends.add(origUser);
+		
 		try{
-			//Get the first friend in the queue
-			Friend tempF = newFriends.poll();
-			
-			//while there are still friends in the queue, the status is success, and we are within max distance
+			//Create temporary Friend to pull from queue
+			//First user is the original user
+			Friend tempF = origUser;
 			int distance = -1;
+			//while there are still friends in the queue, the status is success, and we are within max distance
 			while(neighborhoodIsNotFinished(tempF, distance, distance_max, status)){
 				//if the set of friends contains the polled friend in queue
-				if(!friends.contains(tempF)){
+				if(!currNeighborhood.contains(tempF)){
 					//add the friend to our set
-					friends.add(tempF);
+					currNeighborhood.add(tempF);
 					
 					//find all the immediate friends to this user
 						//these immediate friends have a distance to our original user of 1 more than this friend
 					distance = tempF.getDistance() + 1;
 					String friendID = tempF.getUser().getID();
-					newFriends.addAll(getAllImmediateFriends(friendID, date, friends, distance, status));
+					newFriends.addAll(getAllImmediateFriends(friendID, date, distance, status));
 				}else{
 					//May need to add a way to check if this friends distance
 					//is less than the current, but due to the nature of this 
@@ -388,8 +388,8 @@ public class SocialNetwork {
 	 * @param status	the current status
 	 * @return		returns true if there are still more friends in queue
 	 */
-	private boolean neighborhoodIsNotFinished(Friend f, int distance, int distance_max, SocialNetworkStatus status){
-		return f != null && status.isSuccess() && distance <= distance_max;
+	private boolean neighborhoodIsNotFinished(Friend currFriend, int distance, int distance_max, SocialNetworkStatus status){
+		return currFriend != null && status.isSuccess() && distance <= distance_max;
 	}
 	
 	/**
@@ -397,11 +397,11 @@ public class SocialNetwork {
 	 * @param id	The user's id
 	 * @param date	A date to test if active link
 	 * @param friends	The set of friends we already have found
-	 * @param distance	the distance that these found friends will have assigned to them
+	 * @param distanceOfImmediateFriends	the distance that these found friends will have assigned to them
 	 * @param status	the status variable
 	 * @return	Returns a LinkedList of all the immediate friends of the user with id id
 	 */
-	private LinkedList<Friend> getAllImmediateFriends(String id, Date date, Set<Friend> friends, int distance,SocialNetworkStatus status){
+	private LinkedList<Friend> getAllImmediateFriends(String id, Date date, int distanceOfImmediateFriends,SocialNetworkStatus status){
 		//Get all the links in the network as a collection so we can iterate it
 		Collection<Link> allLinks = links.values();
 		//Initialize our output
@@ -412,7 +412,7 @@ public class SocialNetwork {
 			for(Link l : allLinks){
 				Set<User> usersInLink = l.getUsers();
 				if( l.isActive(date) && oneUserHasId(id, usersInLink))
-					addFoundFriend(id, usersInLink, distance, foundFriends);
+					addFoundFriend(id, usersInLink, distanceOfImmediateFriends, foundFriends);
 			}
 			status.setStatus(ErrorStatus.SUCCESS);
 		}catch(UninitializedObjectException e){
