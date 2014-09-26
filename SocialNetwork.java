@@ -353,7 +353,7 @@ public class SocialNetwork {
 			Friend tempF = origUser;
 			int distance = -1;
 			//while there are still friends in the queue, the status is success, and we are within max distance
-			while(neighborhoodIsNotFinished(tempF, distance, distance_max, status)){
+			while(neighborhoodIsNotFinished(tempF, status)){
 				//if the set of friends contains the polled friend in queue
 				if(!currNeighborhood.contains(tempF)){
 					//add the friend to our set
@@ -362,8 +362,10 @@ public class SocialNetwork {
 					//find all the immediate friends to this user
 						//these immediate friends have a distance to our original user of 1 more than this friend
 					distance = tempF.getDistance() + 1;
-					String friendID = tempF.getUser().getID();
-					newFriends.addAll(getAllImmediateFriends(friendID, date, distance, status));
+					if(distance <= distance_max){
+						String friendID = tempF.getUser().getID();
+						newFriends.addAll(getAllImmediateFriends(friendID, date, distance, status));
+					}
 				}else{
 					//May need to add a way to check if this friends distance
 					//is less than the current, but due to the nature of this 
@@ -388,8 +390,8 @@ public class SocialNetwork {
 	 * @param status	the current status
 	 * @return		returns true if there are still more friends in queue
 	 */
-	private boolean neighborhoodIsNotFinished(Friend currFriend, int distance, int distance_max, SocialNetworkStatus status){
-		return currFriend != null && status.isSuccess() && distance <= distance_max;
+	private boolean neighborhoodIsNotFinished(Friend currFriend, SocialNetworkStatus status){
+		return currFriend != null && status.isSuccess();
 	}
 	
 	/**
