@@ -496,13 +496,21 @@ public class SocialNetwork {
 			return null;
 		
 		Map<Date, Integer> nTrend = new HashMap<Date, Integer>();
-		findNeighborhoodTrend(id, nTrend, status);
+		try{
+			findNeighborhoodTrend(id, nTrend, status);
+		}catch(Exception e){
+			status.setStatus(ErrorStatus.INVALID_USER);
+			return null;
+		}
 		
-		return nTrend;
+		if(status.isSuccess())
+			return nTrend;
+		else
+			return null;
 	}
 	
 	private void findNeighborhoodTrend(String id, Map<Date, Integer> nTrend,
-			SocialNetworkStatus status) {
+			SocialNetworkStatus status) throws UninitializedObjectException {
 		Date prevDate = getEarliestLinkChangeAfterDate(new Date(Long.MIN_VALUE), id, status);
 		Set<Friend> neighborhood = neighborhood(id, prevDate, status);
 		nTrend.put(prevDate, neighborhood.size());
@@ -511,13 +519,14 @@ public class SocialNetwork {
 		NO_MORE_CHANGE:
 		while(true){
 			for(Friend f: neighborhood){
-				Date earliestDate = getEarliestLinkChangeAfterDate(prevDate, id, status);
+				Date earliestDate = getEarliestLinkChangeAfterDate(prevDate, f.getUser().getID(), status);
 				if(earliestDate.before(nextEarliestDate))
 					nextEarliestDate = earliestDate;
 			}
 			if(!nextEarliestDate.equals(new Date(Long.MAX_VALUE))){
 				neighborhood = neighborhood(id, nextEarliestDate, status);
 				nTrend.put(nextEarliestDate, neighborhood.size());
+				nextEarliestDate = new Date(Long.MAX_VALUE);
 			}else{
 				break NO_MORE_CHANGE;
 			}
