@@ -157,6 +157,16 @@ public class SocialNetwork {
 		return true;
 	}
 	
+	private boolean checkParamsNotNull(String id, SocialNetworkStatus status){
+		//Check if the input(s) are null
+		if(id == null)
+			throw new NullPointerException("The given id is null");
+		if(status == null)
+			throw new NullPointerException("The given status is null");
+		status.setStatus(ErrorStatus.SUCCESS);
+		return true;
+	}
+	
 	/**
 	 * Check if parameters are null
 	 * @param ids	a set of user ids
@@ -480,10 +490,68 @@ public class SocialNetwork {
 	}	
 	
 	public Map<Date, Integer> neighborhoodTrend(String id, SocialNetworkStatus status){
+		checkParamsNotNull(id, status);
 		checkId(id, status);
-		return null;
+		if(!status.isSuccess())
+			return null;
+		
+		Map<Date, Integer> nTrend = new HashMap<Date, Integer>();
+		findNeighborhoodTrend(id, nTrend, status);
+		
+		return nTrend;
 	}
 	
+	private void findNeighborhoodTrend(String id, Map<Date, Integer> nTrend,
+			SocialNetworkStatus status) {
+		Date prevDate = getEarliestLinkChangeAfterDate(new Date(Long.MIN_VALUE), id, status);
+		Set<Friend> neighborhood = neighborhood(id, prevDate, status);
+		nTrend.put(prevDate, neighborhood.size());
+		Date nextEarliestDate = new Date(Long.MAX_VALUE);
+		
+		NO_MORE_CHANGE:
+		while(true){
+			for(Friend f: neighborhood){
+				Date earliestDate = getEarliestLinkChangeAfterDate(prevDate, id, status);
+				if(earliestDate.before(nextEarliestDate))
+					nextEarliestDate = earliestDate;
+			}
+			if(!nextEarliestDate.equals(new Date(Long.MAX_VALUE))){
+				neighborhood = neighborhood(id, nextEarliestDate, status);
+				nTrend.put(nextEarliestDate, neighborhood.size());
+			}else{
+				break NO_MORE_CHANGE;
+			}
+		}
+		
+	}
+
+
+
+	private Date getEarliestLinkChangeAfterDate(Date origDate, String id, SocialNetworkStatus status){
+		Collection<Link> allLinks = links.values();
+		Date earliestDate = new Date(Long.MAX_VALUE);
+		try{
+			for(Link l : allLinks){
+				Set<User> userSet = l.getUsers();
+				Date earliestDateAfterOrig = l.nextEvent(origDate);
+				if(linkHasUserAndDateIsEarliest(id, userSet, earliestDate, earliestDateAfterOrig, origDate)){
+					earliestDate = earliestDateAfterOrig;
+				}
+			}
+		}catch(Exception e){
+			status.setStatus(ErrorStatus.INVALID_USERS);
+			return null;
+		}
+		return earliestDate;
+	}
+	
+	private boolean linkHasUserAndDateIsEarliest(String id, Set<User> userSet,
+			Date earliestDate, Date currDate, Date origDate) {
+		return oneUserHasId(id, userSet) && currDate.before(earliestDate) && currDate.after(origDate);
+	}
+
+
+
 	/**
 	 * Makes user set from a set of id Strings using User static function
 	 * @param ids
