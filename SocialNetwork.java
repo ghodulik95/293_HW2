@@ -102,6 +102,20 @@ public class SocialNetwork {
 	 * @param date	a date
 	 */
 	public void establishLink(Set<String> ids, Date date, SocialNetworkStatus status){
+		boolean isEstablish = true;
+		setEvent(ids, date, isEstablish, status);
+	}
+	
+	/**
+	 * Sets the event given the ids of the users of the link, a date, and event type
+	 *  (isEstablish == true -> the event type is establish;
+	 *  	isEstablish == false -> the event type is tearDown)
+	 * @param ids	the pair of ids of the users
+	 * @param date	a date
+	 * @param isEstablish	true if type is establish, false if type is tearDown
+	 * @param status	a status
+	 */
+	private void setEvent(Set<String> ids, Date date, boolean isEstablish, SocialNetworkStatus status){
 		checkParamsNotNull(ids, date, status);
 		//Make a user set from the given set
 		Set<User> userSet = makeUserSetFromStringSet( ids , status);
@@ -109,39 +123,19 @@ public class SocialNetwork {
 			return;
 		
 		//If this link is already in the network, get it, otherwise make it
-		Link l = getLinkForEstablish(userSet, status);
+		Link l = getLinkForSettingEvent(userSet, isEstablish, status);
 		
 		if(status.isSuccess()){
 			//establish the date
 			try{
-				l.establish(date, status);
+				if(isEstablish)
+					l.establish(date, status);
+				else
+					l.tearDown(date, status);
 			}catch(UninitializedObjectException e){
 				
 			}	
 		}
-	}
-	
-	/**
-	 * Gets the link for an establish event.  Sets status to corresponding
-	 * values when there are errors.
-	 * @param userSet	a ser of Users
-	 * @param status	a SocialNetworkStatus
-	 * @return returns the link, or null if the activity of the link does not work
-	 */
-	private Link getLinkForEstablish(Set<User> userSet, SocialNetworkStatus status){
-		Link l;
-		if(links.containsKey(userSet)){
-			l = links.get(userSet);
-			//If the link is active after the last link, we cannot establish it, so return false
-			if(l.isActiveAfterLastLink())
-				status.setStatus(ErrorStatus.ALREADY_ACTIVE);
-			else { /* do nothing -- we expect this */ }
-		}else{
-			l = new Link();
-			l.setUsers(userSet, status);
-			links.put(userSet, l);
-		}
-		return l;
 	}
 	
 	/**
@@ -184,23 +178,25 @@ public class SocialNetwork {
 	 * @param date	a date
 	 */
 	public void tearDownLink(Set<String> ids, Date date, SocialNetworkStatus status){
-		checkParamsNotNull(ids, date, status);
-		
-		//Make a user set from the given set
-		Set<User> userSet = makeUserSetFromStringSet( ids, status );
-		if(!status.isSuccess())
-			return;
-		
-		//If this link is already in the network, get it, otherwise make it
-		Link l = getLinkForTearDown(userSet, status);
-		
-		if(status.isSuccess()){
-			//tear down the date, and return false if there is a problem or exception
-			try{
-				l.tearDown(date, status);
-			}catch(UninitializedObjectException e){
-				
-			}	
+		boolean isEstablish = false;
+		setEvent(ids, date, isEstablish, status);
+	}
+	
+	/**
+	 * Checks if a link status is valid for the given type of event
+	 * @param link	the given link
+	 * @param isEstablish	this is true if we are trying to establish a link, false otherwise 
+	 * 						(ie the event tyoe is tearDown)
+	 * @param status	sets statsu to ALREADY_ACTIVE if the event type is establish and the link is active
+	 * 					 or ALREADY_INACTIVE if the event type is tearDown and it is inactive
+	 */
+	private void checkIfLinkStatusIsValid(Link link, boolean isEstablish, SocialNetworkStatus status){
+		if(link.isActiveAfterLastLink() && isEstablish){
+			status.setStatus(ErrorStatus.ALREADY_ACTIVE);
+		}else if(!link.isActiveAfterLastLink() && !isEstablish){
+			status.setStatus(ErrorStatus.ALREADY_INACTIVE);
+		}else{
+			//Do nothing, we want this case
 		}
 	}
 	
@@ -209,18 +205,26 @@ public class SocialNetwork {
 	 * values when there are errors.
 	 * @param userSet	a set of users
 	 * @param status	a SocialNetworkStatus
-	 * @return returns the link, or null if hte activity of the link does not work
+	 * @return returns the link, or null if the activity of the link does not work
 	 */
-	private Link getLinkForTearDown(Set<User> userSet, SocialNetworkStatus status){
+	private Link getLinkForSettingEvent(Set<User> userSet, boolean isEstablish, SocialNetworkStatus status){
 		Link l;
+		//If this link is already in the network
 		if(links.containsKey(userSet)){
 			l = links.get(userSet);
-			//If the link is inactive after the last link, we cannot tear it down, so return false
-			if(!l.isActiveAfterLastLink())
-				status.setStatus(ErrorStatus.ALREADY_INACTIVE);
-			else { /* do nothing -- we expect this*/ }
-		}else{
-			//return false, because we cannot tear down a link that has never been established
+			//Check if the links is valid for tearing down
+			checkIfLinkStatusIsValid(l, isEstablish, status);
+		}
+		//If this link is not in the network and we are trying to establish a new event
+		else if(isEstablish){
+			//make a new link for it
+			l = new Link();
+			l.setUsers(userSet, status);
+			links.put(userSet, l);
+		}
+		//If this link is not in the network and it is a teardown event
+		else{
+			//set status to ALREADY_INACTIVE because we cannot tear down a link that has never been established
 			status.setStatus(ErrorStatus.ALREADY_INACTIVE);
 			l = null;
 		}
@@ -347,6 +351,9 @@ public class SocialNetwork {
 		Friend origUser = new Friend();
 		origUser.set(u, 0);
 		
+		//Get the links that are active on this date
+		Collection<Link> activeLinks = getActiveLinks(date, status);
+		
 		try{
 			//Create temporary Friend to pull from queue
 			//First user is the original user
@@ -364,7 +371,7 @@ public class SocialNetwork {
 					distance = tempF.getDistance() + 1;
 					if(distance <= distance_max){
 						String friendID = tempF.getUser().getID();
-						newFriends.addAll(getAllImmediateFriends(friendID, date, distance, status));
+						newFriends.addAll(getAllImmediateFriends(friendID, distance, activeLinks, status));
 					}
 				}else{
 					//May need to add a way to check if this friends distance
@@ -381,6 +388,26 @@ public class SocialNetwork {
 		}
 	}
 	
+	/**
+	 * Returns all the links in the network that are active on the given date
+	 * @param date	a given date
+	 * @param status	Sets status to INVALID_DATE if an exception is thrown
+	 * @return	returns a collection of all the active links on date date
+	 */
+	private Collection<Link> getActiveLinks(Date date, SocialNetworkStatus status) {
+		Collection<Link> allLinks = links.values();
+		Collection<Link> activeLinks = new LinkedList<Link>();
+		try{
+			for(Link l : allLinks){
+				if(l.isActive(date))
+					activeLinks.add(l);
+			}
+		}catch(Exception e){
+			status.setStatus(ErrorStatus.INVALID_DATE);
+		}
+		return activeLinks;
+	}
+
 	/**
 	 * Checks if the neighborhood is complete.  It is complete when either the next friend
 	 * is null, the distance exceeds the specified max, or the if the status is not successful
@@ -403,17 +430,15 @@ public class SocialNetwork {
 	 * @param status	the status variable
 	 * @return	Returns a LinkedList of all the immediate friends of the user with id id
 	 */
-	private LinkedList<Friend> getAllImmediateFriends(String id, Date date, int distanceOfImmediateFriends,SocialNetworkStatus status){
-		//Get all the links in the network as a collection so we can iterate it
-		Collection<Link> allLinks = links.values();
+	private LinkedList<Friend> getAllImmediateFriends(String id, int distanceOfImmediateFriends, Collection<Link> activeLinks, SocialNetworkStatus status){
 		//Initialize our output
 		LinkedList<Friend> foundFriends = new LinkedList<Friend>();
 		try{
 			//for each of our links, add the other user in the link whenever
 			//the link is active AND one of the users is the given one
-			for(Link l : allLinks){
+			for(Link l : activeLinks){
 				Set<User> usersInLink = l.getUsers();
-				if( l.isActive(date) && oneUserHasId(id, usersInLink))
+				if( oneUserHasId(id, usersInLink))
 					addFoundFriend(id, usersInLink, distanceOfImmediateFriends, foundFriends);
 			}
 			status.setStatus(ErrorStatus.SUCCESS);
@@ -453,6 +478,11 @@ public class SocialNetwork {
 		u.setID(id);
 		return userSet.contains(u);
 	}	
+	
+	public Map<Date, Integer> neighborhoodTrend(String id, SocialNetworkStatus status){
+		checkId(id, status);
+		return null;
+	}
 	
 	/**
 	 * Makes user set from a set of id Strings using User static function
