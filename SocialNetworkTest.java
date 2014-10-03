@@ -74,7 +74,25 @@ public class SocialNetworkTest {
 		assertTrue(status.isSuccess());
 		assertEquals(nTrendB, nTrendA);
 		
+		s = new SocialNetwork();
+		status = new SocialNetworkStatus(ErrorStatus.SUCCESS);
+		nTrendB = new HashMap<Date, Integer>();
+		s.addUser(u1);
 		
+		for(int i = 2; i <= 10; i++){
+			User u = new User();
+			u.setID(String.valueOf(i));
+			s.addUser(u);
+			Set<String> userSet = new HashSet<String>();
+			userSet.add(String.valueOf(i));
+			userSet.add(String.valueOf(i-1));
+			Date date = Date.valueOf("2013-3-"+i);
+			s.establishLink(userSet, date, status);
+			nTrendB.put(date, i);
+			nTrendA = s.neighborhoodTrend("1", status);
+			assertTrue(status.isSuccess());
+			assertEquals(nTrendB, nTrendA);
+		}
 	}
 	
 	@Test
