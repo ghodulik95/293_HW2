@@ -73,6 +73,8 @@ public class SocialNetworkTest {
 		if(viewToStrings) System.out.println(nTrendA+" "+status.getStatus());
 		assertTrue(status.isSuccess());
 		assertEquals(nTrendB, nTrendA);
+		
+		
 	}
 	
 	@Test

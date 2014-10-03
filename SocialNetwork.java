@@ -494,6 +494,13 @@ public class SocialNetwork {
 		return userSet.contains(u);
 	}	
 	
+	/**
+	 * Finds what dates a neighborhood for a certain id changed
+	 * and how many friends were in the neighborhood at the time
+	 * @param id	A user ids
+	 * @param status	an error status
+	 * @return	returns a map that links a date to to a neighborhood size
+	 */
 	public Map<Date, Integer> neighborhoodTrend(String id, SocialNetworkStatus status){
 		checkParamsNotNull(id, status);
 		checkId(id, status);
@@ -514,39 +521,107 @@ public class SocialNetwork {
 			return null;
 	}
 	
+	/**
+	 * Adds trends to the given map nTrend
+	 * @param id	a users id
+	 * @param nTrend	A given neighborhoodTrend Map
+	 * @param status	an error status
+	 * @throws UninitializedObjectException		
+	 */
 	private void findNeighborhoodTrend(String id, Map<Date, Integer> nTrend,
 			SocialNetworkStatus status) throws UninitializedObjectException {
+		//Initialize previous date at minimum value
 		Date prevDate = new Date(Long.MIN_VALUE);
-		
-		boolean filterByDate = false;
-		Set<Friend> prevNeighborhood = new HashSet<Friend>();
-		Set<Friend> potentialNeighborhood = new HashSet<Friend>();
-		findFriends(id, filterByDate, null, Integer.MAX_VALUE, potentialNeighborhood, status);
-		//nTrend.put(prevDate, potentialFriends.size());
+		//Initialize the next earliest date at the maximum value
 		Date nextEarliestDate = new Date(Long.MAX_VALUE);
 		
-		NO_MORE_CHANGE:
-		while(true){
-			for(Friend f: potentialNeighborhood){
-				Date earliestDate = getEarliestLinkChangeAfterDate(prevDate, f.getUser().getID(), status);
-				if(earliestDate.before(nextEarliestDate)){
-					nextEarliestDate = earliestDate;
-				}
-			}
-			if(!nextEarliestDate.equals(new Date(Long.MAX_VALUE))){
+		//Get all users that have the potential to change the given user's
+		//neighborhood by getting a neighborhood that does not filter by dates being active
+		Set<Friend> potentialNeighborhood = new HashSet<Friend>();
+		boolean filterByDate = false;
+		findFriends(id, filterByDate, null, Integer.MAX_VALUE, potentialNeighborhood, status);
+		
+		//Set the previous Neighborhood as an empty set -- this ensures that the
+		//first entry does not have a 0 neighborhood size value
+		Set<Friend> prevNeighborhood = new HashSet<Friend>();
+		
+		//Keep checking the dates that links from out potentialNeighborhood change
+		//to see if the neighborhood changed
+		boolean neighborhoodIsChanging = true;
+		while(neighborhoodIsChanging){
+			//get the next earliest event change from our potential neighborhood
+			nextEarliestDate = getNextEarliestDate(prevDate, nextEarliestDate, potentialNeighborhood, status);
+			
+			//if there was a future change, check to see if the new neighborhood
+			//is different and add it if it is
+			if(hasFutureLinkChange(nextEarliestDate)){
+				//get the new neighborhood
 				Set<Friend> newNeighborhood = neighborhood(id, nextEarliestDate, status);
+				
+				//if this is a new neighborhood 
+				//set the previous neighborhood to this one and add the trend
 				setPrevNeighborhoodAndAddTrend(nTrend, prevNeighborhood, newNeighborhood, nextEarliestDate);
+				
+				//housekeeping for next iteration
 				prevDate = nextEarliestDate;
 				nextEarliestDate = new Date(Long.MAX_VALUE);
 			}else{
-				break NO_MORE_CHANGE;
+				//if there is no link changes in the future,
+				//the neighborhood will never change after the previous date
+				//so we are done
+				neighborhoodIsChanging = false;
 			}
 		}
 		
 	}
+	
+	/**
+	 * returns true if there is future link change, given the return of getNextEarliestDate
+	 * @param nextEarliestEventDate the output of getNextEarliestDate
+	 * @return	returns true if there is a future change
+	 */
+	private boolean hasFutureLinkChange(Date nextEarliestEventDate){
+		//getNextEarliestDate() returns a date with a max value if there was no future change
+		return !nextEarliestEventDate.equals(new Date(Long.MAX_VALUE));
+	}
+
+	/**
+	 * Given a friend pool and some date limits, find the first link change after the lowerBoundDate.
+	 * If there is none, return the upperBoundDate
+	 * @param lowerBoundDate The found date must be after this date
+	 * @param upperBoundDate	The found date must be before or equal to this date
+	 * @param friendPool	A pool of friends to search
+	 * @param status	An error status
+	 * @return	returns the date of the earliest change after lowerBoundDate
+	 * @throws UninitializedObjectException
+	 */
+	private Date getNextEarliestDate(Date lowerBoundDate, Date upperBoundDate,
+			Set<Friend> friendPool, SocialNetworkStatus status) throws UninitializedObjectException {
+		//Set our current earliest date to the upper bound
+		Date currentEarliest = upperBoundDate;
+		//Get the earliest event change for each friend in the friend pool
+		//and check it against our current
+		for(Friend f: friendPool){
+			Date earliestDate = getEarliestLinkChangeAfterDate(lowerBoundDate, f.getUser().getID(), status);
+			//If the earliest change for this friend is before our current earliest,
+			if(earliestDate.before(currentEarliest)){
+				//set this date to our current earliest
+				 currentEarliest = earliestDate;
+			}
+		}
+		return currentEarliest;
+	}
 
 
-
+	/**
+	 * If the previous neighborhood is not the same as the new neighborhood,
+	 * this sets the previous neighborhood to the new one, and adds a trend
+	 * to the given map.
+	 * @param nTrend	Our neighborhood trend map
+	 * @param prevNeighborhood	the  previous neighborhood
+	 * @param newNeighborhood	the new neighborhood
+	 * @param date	the date from the new neighborhood
+	 */
 	private void setPrevNeighborhoodAndAddTrend(Map<Date, Integer> nTrend,
 			Set<Friend> prevNeighborhood, Set<Friend> newNeighborhood, Date date) {
 		if(!neighborhoodsAreSame(newNeighborhood, prevNeighborhood)){
@@ -558,47 +633,65 @@ public class SocialNetwork {
 	}
 
 
-	//Need this function because containsAll will not work since
-	//Friends are the same when they have the same id, distance is not taken into account
-	private boolean neighborhoodsAreSame(Set<Friend> newNeighborhood,
-			Set<Friend> prevNeighborhood) {
-			return newNeighborhood.containsAll(prevNeighborhood) && prevNeighborhood.containsAll(newNeighborhood);
+	/**
+	 * Returns true if the given neighborhoods are the same.
+	 * Note: does not check if friend distances are the same.
+	 * @param neighborhood1	the new neighborhood
+	 * @param neighborhood2	the old neighborhood
+	 * @return	returns true if the two neighborhoods have the exact same
+	 * 			friends contained
+	 */
+	private boolean neighborhoodsAreSame(Set<Friend> neighborhood1,
+			Set<Friend> neighborhood2) {
+			return neighborhood1.containsAll(neighborhood2) && neighborhood2.containsAll(neighborhood1);
 	}
 
-
-
-	private void setNextEarliestDate(Date earliestDate, Date nextEarliestDate) {
-		if(earliestDate.before(nextEarliestDate)){
-			nextEarliestDate = earliestDate;
-		}
-	}
-
-
-
-	private Date getEarliestLinkChangeAfterDate(Date origDate, String id, SocialNetworkStatus status){
+	/**
+	 * Gets the earliest link change after the original date for a certain user
+	 * @param lowerBoundDate	the lower bound for the date
+	 * @param id	the users id
+	 * @param status	a SocialNetworkStatus
+	 * @return	returns the earliest link change date after the lowerBoundDate, or a max value if
+	 * 			there is no date after the lower bound.
+	 * @throws UninitializedObjectException 
+	 */
+	private Date getEarliestLinkChangeAfterDate(Date lowerBoundDate, String id, SocialNetworkStatus status) throws UninitializedObjectException{
+		//Get all links in network
 		Collection<Link> allLinks = links.values();
+		//set the earliest date to a max value
 		Date earliestDate = new Date(Long.MAX_VALUE);
-		try{
-			for(Link l : allLinks){
-				Set<User> userSet = l.getUsers();
-				Date earliestDateAfterOrig = l.nextEvent(origDate);
-				if(linkHasUserAndDateIsEarliest(id, userSet, earliestDate, earliestDateAfterOrig, origDate)){
+		
+		//Check each link
+		for(Link l : allLinks){
+			Set<User> userSet = l.getUsers();
+			//If this link has the user with this id
+			if(oneUserHasId(id, userSet)){
+				//get this link's earliest event after the lower bound
+				Date earliestDateAfterOrig = l.nextEvent(lowerBoundDate);
+				
+				//If this link's next date is earlier than the current earliest
+				//and later than the lower bound
+				if(dateIsEarliest(earliestDateAfterOrig, earliestDate, lowerBoundDate)){
+					//set our earliest date to this date
 					earliestDate = earliestDateAfterOrig;
 				}
 			}
-		}catch(Exception e){
-			status.setStatus(ErrorStatus.INVALID_USERS);
-			return null;
 		}
+		
 		return earliestDate;
 	}
 	
-	private boolean linkHasUserAndDateIsEarliest(String id, Set<User> userSet,
-			Date earliestDate, Date currDate, Date origDate) {
-		return currDate != null && oneUserHasId(id, userSet) && currDate.before(earliestDate) && currDate.after(origDate);
+	/**
+	 * Checks if the toCheck date is before the supposed earlier date
+	 * after the lower bound
+	 * @param supposedEarlier	The date supposedly earliest
+	 * @param toCheck	the date to check if it is earlier
+	 * @param lowerBoundDate	the lower bound
+	 * @return	returns true if the toCheck date is earlier than the supposed and after the lower bound
+	 */
+	private boolean dateIsEarliest(Date toCheck, Date supposedEarlier, Date lowerBoundDate) {
+		return toCheck != null && toCheck.before(supposedEarlier) && toCheck.after(lowerBoundDate);
 	}
-
-
 
 	/**
 	 * Makes user set from a set of id Strings using User static function
