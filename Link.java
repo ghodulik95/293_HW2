@@ -81,21 +81,77 @@ public class Link {
 	 * @throws UninitializedObjectException		throws if the link is not valid
 	 */
 	public void establish(Date date, SocialNetworkStatus status) throws UninitializedObjectException{
-		checkIfLinkIsReady(date, status);
-		
-		//if the user is active already
-		if(this.isActiveAfterLastLink)
-			status.setStatus(ErrorStatus.ALREADY_ACTIVE);
-		//if the date is not after the last date
-		else if(!dateIsAfterLastEvent(date))
-			status.setStatus(ErrorStatus.INVALID_DATE);
-		//else everything is good for establish
-		else{
-			//if there are no problems, add the given date to the date list, set active to true, and return true
-			dates.add(date);
-			this.isActiveAfterLastLink = true;
-			status.setStatus(ErrorStatus.SUCCESS);
+		checkIfLinkIsReady(date, status, status);
+		boolean isEstablish = true;
+		createEvent(isEstablish, date, status);
+	}
+	
+	/**
+	 * Create the given event if the link is valid for that kind of event
+	 * @param isEstablish	true if this is an establishment event, false for teardown
+	 * @param date	the date of the event
+	 * @param status	error status
+	 */
+	private void createEvent(boolean isEstablish, Date date, SocialNetworkStatus status) {
+		//Check if the link is ready for this kind of event
+		checkIfLinkValidForNewEvent(isEstablish,date, status);
+		//if it is, add it
+		if(status.isSuccess()){
+			addEvent(isEstablish, date, status);
 		}
+	}
+	
+	/**
+	 * Check if the date is after the last event and if the activity of this link
+	 * is a match for this type of event
+	 * @param isEstablish	true if this is an establishment event, false for teardown
+	 * @param date	the date of the event
+	 * @param status	error status
+	 */
+	private void checkIfLinkValidForNewEvent(boolean isEstablish, Date date, SocialNetworkStatus status){
+		checkAfterLastDate(date, status);
+		checkIfActiveMatchesEventType(isEstablish, status);
+	}
+	
+	/**
+	 * Changes the error status if the latest activity of this link does not match
+	 * this kind of event
+	 * @param isEstablish true if establish, false for teardown
+	 * @param status	error status
+	 */
+	private void checkIfActiveMatchesEventType(boolean isEstablish,
+			SocialNetworkStatus status) {
+		//If this is establish and the link is already active, set error
+		if(isEstablish && this.isActiveAfterLastLink){
+			status.setStatus(ErrorStatus.ALREADY_ACTIVE);
+		}
+		//id the link is teardown and the link is already inactive, set error
+		else if(!isEstablish && !this.isActiveAfterLastLink){
+			status.setStatus(ErrorStatus.ALREADY_INACTIVE);
+		}
+	}
+	
+	/**
+	 * Change the error status if the given date is not after the last event
+	 * @param date	given date for event
+	 * @param status	error status
+	 */
+	private void checkAfterLastDate(Date date, SocialNetworkStatus status) {
+		if(!dateIsAfterLastEvent(date))
+			status.setStatus(ErrorStatus.INVALID_DATE);
+		
+	}
+	
+	/**
+	 *	Add an event to the event list --- input at this point is assumed to be completely valid 
+	 * @param isEstablish	true if this is an establishment event, false for teardown
+	 * @param date	the date of the event
+	 * @param status	error status
+	 */
+	private void addEvent(boolean isEstablish, Date date, SocialNetworkStatus status){
+		dates.add(date);
+		this.isActiveAfterLastLink = isEstablish;
+		status.setStatus(ErrorStatus.SUCCESS);
 	}
 	
 	/**
@@ -104,23 +160,10 @@ public class Link {
 	 * @throws UninitializedObjectException		throws if the link is not valid
 	 */
 	public void tearDown(Date date, SocialNetworkStatus status) throws UninitializedObjectException{
-		checkIfLinkIsReady(date, status);
-		
-		//if the user is already inactive
-		if(!this.isActiveAfterLastLink)
-			status.setStatus(ErrorStatus.ALREADY_INACTIVE);
-		//if the date is not after the last date
-		else if(!dateIsAfterLastEvent(date))
-			status.setStatus(ErrorStatus.INVALID_DATE);
-		else{
-			//if there are no problems, add the given date to the date list, set active to false, and return true
-			dates.add(date);
-			this.isActiveAfterLastLink = false;
-			status.setStatus(ErrorStatus.SUCCESS);
-		}
+		checkIfLinkIsReady(date, status, status);
+		boolean isEstablish = false;
+		createEvent(isEstablish, date, status);
 	}
-	
-	
 	
 	/**
 	 * 
@@ -238,14 +281,14 @@ public class Link {
 	 * @return	returns true if params are not null and the link is valid
 	 * @throws UninitializedObjectException		thrown if link is invalid
 	 */
-	private boolean checkIfLinkIsReady(Object param1, Object param2) throws UninitializedObjectException{
+	private boolean checkIfLinkIsReady(Object param1, Object param2, SocialNetworkStatus status) throws UninitializedObjectException{
 		//Check if the input(s) are null
 		if(param1 == null || param2 == null)
 			throw new NullPointerException("The given parameter is null.");
 		//if not valid, throw exception
 		if(!this.isValidLink)
 			throw new UninitializedObjectException("Link user set not initialized");
-		
+		status.setStatus(ErrorStatus.SUCCESS);
 		return true;
 	}
 	
