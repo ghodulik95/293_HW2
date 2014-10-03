@@ -122,15 +122,23 @@ public class Link {
 	private void checkIfActiveMatchesEventType(boolean isEstablish,
 			SocialNetworkStatus status) {
 		//If this is establish and the link is already active, set error
-		if(isEstablish && this.isActiveAfterLastLink){
+		if(establishAndActive(isEstablish)){
 			status.setStatus(ErrorStatus.ALREADY_ACTIVE);
 		}
 		//id the link is teardown and the link is already inactive, set error
-		else if(!isEstablish && !this.isActiveAfterLastLink){
+		else if(tearDownAndInActive(isEstablish)){
 			status.setStatus(ErrorStatus.ALREADY_INACTIVE);
 		}
 	}
 	
+	private boolean tearDownAndInActive(boolean isEstablish) {
+		return !isEstablish && !this.isActiveAfterLastLink;
+	}
+
+	private boolean establishAndActive(boolean isEstablish) {
+		return isEstablish && this.isActiveAfterLastLink;
+	}
+
 	/**
 	 * Change the error status if the given date is not after the last event
 	 * @param date	given date for event
