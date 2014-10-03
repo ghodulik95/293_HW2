@@ -10,7 +10,9 @@
 
 import static org.junit.Assert.*;
 import java.sql.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
@@ -18,6 +20,60 @@ import org.junit.Test;
 public class SocialNetworkTest {
 	SocialNetwork s;
 	SocialNetworkStatus status;
+	
+	@Test
+	public void testNeighborhoodTrend(){
+		boolean viewToStrings = false;
+		s = new SocialNetwork();
+		status = new SocialNetworkStatus(ErrorStatus.SUCCESS);
+		Map<Date, Integer> nTrendB = new HashMap<Date, Integer>();
+		User u1 = new User();
+		u1.setID("1");
+		User u2 = new User();
+		u2.setID("2");
+		User u3 = new User();
+		u3.setID("3");
+		s.addUser(u1); s.addUser(u2); s.addUser(u3);
+		Set<String> u1Andu2 = new HashSet<String>();
+		u1Andu2.add("1"); u1Andu2.add("2");
+		//Test if a neighborhood of 2 is formed
+		Date date1 = Date.valueOf("2013-11-12");
+		s.establishLink(u1Andu2, date1, status);
+		nTrendB.put(date1, 2);
+		Map<Date, Integer> nTrendA = s.neighborhoodTrend("1", status);
+		if(viewToStrings) System.out.println(nTrendA+" "+status.getStatus());
+		assertTrue(status.isSuccess());
+		assertEquals(nTrendA, nTrendB);
+		
+		Set<String> u2Andu3 = new HashSet<String>();
+		u2Andu3.add("2"); u2Andu3.add("3");
+		//Test if a neighborhood of 2 is formed
+		date1 = Date.valueOf("2013-11-13");
+		s.establishLink(u2Andu3, date1, status);
+		nTrendB.put(date1, 3);
+		nTrendA = s.neighborhoodTrend("1", status);
+		if(viewToStrings) System.out.println(nTrendA+" "+status.getStatus());
+		assertTrue(status.isSuccess());
+		assertEquals(nTrendA, nTrendB);
+		
+		date1 = Date.valueOf("2013-11-14");
+		s.tearDownLink(u2Andu3, date1, status);
+		nTrendB.put(date1, 2);
+		nTrendA = s.neighborhoodTrend("1", status);
+		if(viewToStrings) System.out.println(nTrendA+" "+status.getStatus());
+		assertTrue(status.isSuccess());
+		assertEquals(nTrendB, nTrendA);
+		
+		Set<String> u1Andu3 = new HashSet<String>();
+		u1Andu3.add("1"); u1Andu3.add("3");
+		date1 = Date.valueOf("2013-11-14");
+		s.establishLink(u1Andu3, date1, status);
+		nTrendB.remove(date1);
+		nTrendA = s.neighborhoodTrend("1", status);
+		if(viewToStrings) System.out.println(nTrendA+" "+status.getStatus());
+		assertTrue(status.isSuccess());
+		assertEquals(nTrendB, nTrendA);
+	}
 	
 	@Test
 	public void testNeighborhood(){

@@ -334,7 +334,8 @@ public class SocialNetwork {
 		Set<Friend> neighborhood = new HashSet<Friend>();
 		
 		//Find the friends of user id
-		findFriends(id, date, distance_max, neighborhood, status);
+		boolean filterByDate = true;
+		findFriends(id, filterByDate,date, distance_max, neighborhood, status);
 		
 		//if there was not a problem, return the neighborhood
 		if(status.isSuccess()){
@@ -352,7 +353,7 @@ public class SocialNetwork {
 	 * @param date	the date
 	 * @param status	status variable
 	 */
-	private void findFriends(String originId, Date date, int distance_max, Set<Friend> currNeighborhood, SocialNetworkStatus status){
+	private void findFriends(String originId, boolean filterByDate, Date date, int distance_max, Set<Friend> currNeighborhood, SocialNetworkStatus status){
 		//Make a queue of friends
 		Queue<Friend> newFriends = new LinkedList<Friend>();
 		
@@ -362,7 +363,8 @@ public class SocialNetwork {
 		origUser.set(u, 0);
 		
 		//Get the links that are active on this date
-		Collection<Link> activeLinks = getActiveLinks(date, status);
+		//Or just all links if we are not filtering by date
+		Collection<Link> relevantLinks = getRelevantLinks(date, filterByDate, status);
 		
 		try{
 			//Create temporary Friend to pull from queue
@@ -381,7 +383,7 @@ public class SocialNetwork {
 					distance = tempF.getDistance() + 1;
 					if(distance <= distance_max){
 						String friendID = tempF.getUser().getID();
-						newFriends.addAll(getAllImmediateFriends(friendID, distance, activeLinks, status));
+						newFriends.addAll(getAllImmediateFriends(friendID, distance, relevantLinks, status));
 					}
 				}else{
 					//May need to add a way to check if this friends distance
@@ -399,13 +401,16 @@ public class SocialNetwork {
 	}
 	
 	/**
+	 * 
 	 * Returns all the links in the network that are active on the given date
 	 * @param date	a given date
 	 * @param status	Sets status to INVALID_DATE if an exception is thrown
 	 * @return	returns a collection of all the active links on date date
 	 */
-	private Collection<Link> getActiveLinks(Date date, SocialNetworkStatus status) {
+	private Collection<Link> getRelevantLinks(Date date, boolean filterByDate,SocialNetworkStatus status) {
 		Collection<Link> allLinks = links.values();
+		if(!filterByDate)
+			return allLinks;
 		Collection<Link> activeLinks = new LinkedList<Link>();
 		try{
 			for(Link l : allLinks){
@@ -511,27 +516,61 @@ public class SocialNetwork {
 	
 	private void findNeighborhoodTrend(String id, Map<Date, Integer> nTrend,
 			SocialNetworkStatus status) throws UninitializedObjectException {
-		Date prevDate = getEarliestLinkChangeAfterDate(new Date(Long.MIN_VALUE), id, status);
-		Set<Friend> neighborhood = neighborhood(id, prevDate, status);
-		nTrend.put(prevDate, neighborhood.size());
+		Date prevDate = new Date(Long.MIN_VALUE);
+		
+		boolean filterByDate = false;
+		Set<Friend> prevNeighborhood = new HashSet<Friend>();
+		Set<Friend> potentialNeighborhood = new HashSet<Friend>();
+		findFriends(id, filterByDate, null, Integer.MAX_VALUE, potentialNeighborhood, status);
+		//nTrend.put(prevDate, potentialFriends.size());
 		Date nextEarliestDate = new Date(Long.MAX_VALUE);
 		
 		NO_MORE_CHANGE:
 		while(true){
-			for(Friend f: neighborhood){
+			for(Friend f: potentialNeighborhood){
 				Date earliestDate = getEarliestLinkChangeAfterDate(prevDate, f.getUser().getID(), status);
-				if(earliestDate.before(nextEarliestDate))
+				if(earliestDate.before(nextEarliestDate)){
 					nextEarliestDate = earliestDate;
+				}
 			}
 			if(!nextEarliestDate.equals(new Date(Long.MAX_VALUE))){
-				neighborhood = neighborhood(id, nextEarliestDate, status);
-				nTrend.put(nextEarliestDate, neighborhood.size());
+				Set<Friend> newNeighborhood = neighborhood(id, nextEarliestDate, status);
+				setPrevNeighborhoodAndAddTrend(nTrend, prevNeighborhood, newNeighborhood, nextEarliestDate);
+				prevDate = nextEarliestDate;
 				nextEarliestDate = new Date(Long.MAX_VALUE);
 			}else{
 				break NO_MORE_CHANGE;
 			}
 		}
 		
+	}
+
+
+
+	private void setPrevNeighborhoodAndAddTrend(Map<Date, Integer> nTrend,
+			Set<Friend> prevNeighborhood, Set<Friend> newNeighborhood, Date date) {
+		if(!neighborhoodsAreSame(newNeighborhood, prevNeighborhood)){
+			nTrend.put(date, newNeighborhood.size());
+			prevNeighborhood.clear();
+			prevNeighborhood.addAll(newNeighborhood);
+		}
+		
+	}
+
+
+	//Need this function because containsAll will not work since
+	//Friends are the same when they have the same id, distance is not taken into account
+	private boolean neighborhoodsAreSame(Set<Friend> newNeighborhood,
+			Set<Friend> prevNeighborhood) {
+			return newNeighborhood.containsAll(prevNeighborhood) && prevNeighborhood.containsAll(newNeighborhood);
+	}
+
+
+
+	private void setNextEarliestDate(Date earliestDate, Date nextEarliestDate) {
+		if(earliestDate.before(nextEarliestDate)){
+			nextEarliestDate = earliestDate;
+		}
 	}
 
 
@@ -556,7 +595,7 @@ public class SocialNetwork {
 	
 	private boolean linkHasUserAndDateIsEarliest(String id, Set<User> userSet,
 			Date earliestDate, Date currDate, Date origDate) {
-		return oneUserHasId(id, userSet) && currDate.before(earliestDate) && currDate.after(origDate);
+		return currDate != null && oneUserHasId(id, userSet) && currDate.before(earliestDate) && currDate.after(origDate);
 	}
 
 
